@@ -5,6 +5,10 @@
 class STM32{{SPI1}} : public ISPI {
 	
 private:
+	SPI_TypeDef* mSPIx={{GPIOB}}; //
+	uint8_t mSPI_Pin={{BLE}}; //
+	
+private:
 	SPI1_CS_BLE mSPI1CSBLE;
 	SPI1_CS_MEM mSPI1CSMEM;
 	SPI_HandleTypeDef hspi1;

@@ -1,6 +1,6 @@
 #include "IPeriherial.h"
 
-class ISPI : public IPeriherial{
+class ISPI : public IPeriherial{  // где чchipselect используем?
 public:
     ISPI(uint8_t* buffer, size_t bufferSize) : mBuffer(buffer), mBufferSize(bufferSize) // здесь непонятно?
     
