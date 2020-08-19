@@ -3,6 +3,10 @@
 #include "IPin.h"
 
 class STM32{{PowerButton}} : IPin {
+	
+private:
+	GPIO_TypeDef* mGPIOx={{GPIOA}};
+	uint16_t mGPIO_Pin={{PowerButton}};
 
 public:
 
@@ -57,10 +61,6 @@ public:
     const char* getPortName() const noexcept override {
         return "{{PA1}}";  // откуда узнаём?
     }
- 
-private:
-	GPIO_TypeDef* mGPIOx={{GPIOA}};
-	uint16_t mGPIO_Pin={{PowerButton}};
 
 bool mInit{false};
 };

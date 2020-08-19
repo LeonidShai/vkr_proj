@@ -2,7 +2,7 @@
 
 enum class SPIChipSelect : uint8_t {
 	MEM, // всегда же будет?
-	{{BLE}}  //устройство, например, блютус, возможны и другие...(например?)
+	{{BLE}}
 }
 
 SPIChipSelectID getSPIChipSelectIDByString(const char* s) noexcept {
