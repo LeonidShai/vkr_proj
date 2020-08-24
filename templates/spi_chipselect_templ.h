@@ -1,14 +1,18 @@
 #include <cstdint>
 
 enum class SPIChipSelect : uint8_t {
-	MEM, // всегда же будет?
-	{{BLE}}
-}
+	{{device}};
+	
+//  Devices examples:
+//  	BLE,
+//  	MEM
 
-SPIChipSelectID getSPIChipSelectIDByString(const char* s) noexcept {
-    if (0 == std::strcmp(s, "{{BLE}}")) {
-        return SPIChipSelectID::{{BLE}};
-    }
+
+	SPIChipSelectID getSPIChipSelectIDByString(const char* s) noexcept {
+		if (0 == std::strcmp(s, "{{device}}")) {
+			return SPIChipSelectID::{{device}};
+		}
     
-    return SPIChipSelectID::Invalid;
+		return SPIChipSelectID::INVALID_ARG;
+	}
 }

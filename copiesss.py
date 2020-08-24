@@ -17,7 +17,7 @@ def parser(filename):
     num_str = []  # список для номеров строк
 
     for c in node.get_children():
-        if c.location.file.name == work_file:
+        if c.location.file.name == filename:
             # print(c.spelling, c.location.line)  # for test
             if c.spelling == "MX_GPIO_Init":
                 for i in c.get_children():
@@ -73,10 +73,11 @@ def work_with_nstr(data_str):
 
         # создание слваря с нужными параметрами и добаление в список (59)
         for j in range(len(a[1])):
-            data_dict = {"portname": None, "pinport": None, "funcname": None}
-            data_dict["portname"] = a[0]
-            data_dict["pinport"] = a[1][j]
-            data_dict["funcname"] = a[2]
+            data_dict = {"PORTNAME": None, "PINNAME": None, "FUNCNAME": None, "IDKEY": None}
+            data_dict["PORTNAME"] = a[0]
+            data_dict["PINNAME"] = a[1][j]
+            data_dict["FUNCNAME"] = a[2]
+            data_dict["IDKEY"] = hex(a[1][j])
             data_list_dict.append(data_dict)
 
     return data_list_dict
@@ -88,18 +89,18 @@ def generation_powerbuttons_pins(l_d):
     :param l_d: list (list of dicts with necessary data from strings)
     :return: None
     """
-    text_template = "D:\python/vkr/tasks\jij_test_templ.c"  # шаблон для автогенерации
+    text_template = "./templates/powbut_templ.h"  # шаблон для автогенерации
     text = open(text_template).read()
     template = jinja2.Template(text)
 
     # генерация файла с классами для всех powerbuttons_pins
+    f = open("./stm32_project/gpio_pins.h", "w")
     for i in range(len(l_d)):
         model = l_d[i]
         temp = template.render(model)
-        f = open("test_jiji.c", "a")
         f.writelines(temp)
         f.writelines("\n\n\n")
-        f.close()
+    f.close()
 
     return None
 
@@ -107,8 +108,9 @@ def generation_powerbuttons_pins(l_d):
 if __name__ == "__main__":
 
     # work_file = "D:\python\cubemx\Core\Src\main.c"
-    work_file = "D:\python\cubemx/all_powerbuttons\Core\Src\main.c"
+    # work_file = "D:\python\cubemx/all_powerbuttons\Core\Src\main.c"
     # work_file = "D:\python\cubemx/three_powerbuttons\Core\Src\main.c"
+    work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\main.c"
 
     number_str = parser(work_file)  # парсим номера нужных строк в файле
 

@@ -11,11 +11,11 @@ public:
     virtual Status write(bool state) noexcept = 0;  // запись при инициализации какой-либо периферии GPIO_PIN, SPI, I2C
 
     PeriherialType getPeriherialType() const noexcept override {
-        return {{0xb5d17aaaU}};  // crc32 здесь будет переменная 
+        return 0xb5d17aaa;  // crc32 здесь будет переменная 
     }
  
     bool isPeriherialTypeParent(PeriherialType periherialType) const noexcept override {  // является ли IPIN родителем PowerButton, или др периферии
-        if ({{0xb5d17aaaU}} == periherialType) {
+        if (0xb5d17aaa == periherialType) {
             return true;
         }
         return false;
@@ -23,5 +23,5 @@ public:
     
     virtual const char* getPortName() const noexcept = 0;  // метод для установки имени порта, на который подключается периферия
 	
-	const PeriherialType Type = {{0xb5d17aaaU}};
+	const PeriherialType Type = {{0xb5d17aaa}};
 };
