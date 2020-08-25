@@ -2,11 +2,11 @@
 
 #include "IPin.h"
 
-class STM32{{pinport}} : IPin {
+class STM32{{PINNAME}} : IPin {
 	
 private:
-	GPIO_TypeDef* mGPIOx={{portname}};
-	uint16_t mGPIO_Pin={{pinport}};
+	GPIO_TypeDef* mGPIOx={{PORTNAME}};
+	uint16_t mGPIO_Pin={{PINNAME}};
 
 public:
 
@@ -15,15 +15,15 @@ public:
 	
 	  GPIO_InitTypeDef GPIO_InitStruct = {0};
 	  
-	  __HAL_RCC_{{portname}}_CLK_ENABLE();
+	  __HAL_RCC_{{PORTNAME}}_CLK_ENABLE();
 	  
-	  HAL_GPIO_WritePin({{portname}}, {{pinport}}_Pin, {{funcname}});  // а может это толь в метод write??
+	  HAL_GPIO_WritePin({{PORTNAME}}, {{PINNAME}}_Pin, {{FUNCNAME}});  // а может это толь в метод write??
 	  
-	  GPIO_InitStruct.Pin = {{pinport}}_Pin;
+	  GPIO_InitStruct.Pin = {{PINNAME}}_Pin;
 	  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	  GPIO_InitStruct.Pull = GPIO_NOPULL;
 	  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	  HAL_GPIO_Init({{portname}}, &GPIO_InitStruct);
+	  HAL_GPIO_Init({{PORTNAME}}, &GPIO_InitStruct);
       
       mInit = true;
       return Status::SUCCESS;
@@ -31,7 +31,7 @@ public:
 
     std::pair<Status, bool> read() noexcept override {
         if (mInit) {
-            auto state = HAL_GPIO_ReadPin({{portname}}, {{pinport}});
+            auto state = HAL_GPIO_ReadPin({{PORTNAME}}, {{PINNAME}});
             return {Status::SUCCESS, state};
         }    
         return {Status::NOT_INIT, false};
@@ -40,7 +40,7 @@ public:
     Status write(bool state) noexcept override {
         if (mInit) {
             auto pinState = state ? GPIO_PIN_SET : GPIO_PIN_RESET;
-            HAL_GPIO_WritePin({{portname}}, {{pinport}}, {{funcname}});
+            HAL_GPIO_WritePin({{PORTNAME}}, {{PINNAME}}, {{FUNCNAME}});
             return Status::SUCCESS;
         }
         return Status::NOT_INIT;
@@ -51,15 +51,15 @@ public:
     }
 
     PeriherialID getPeriherialID() const noexcept override {
-        return 0x1e2953f2U; //STM32PowerButton нужно сделать
+        return {{IDKEY}}; //STM32PowerButton нужно сделать
     };
     
     const char* getName() const noexcept override {
-        return "{{pinport}}";
+        return "{{PINNAME}}";
     }
     
     const char* getPortName() const noexcept override {
-        return "{{PA1}}";  // откуда узнаём?
+        return "{{PIN}}";  // откуда узнаём?
     }
 
 bool mInit{false};
