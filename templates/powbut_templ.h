@@ -20,10 +20,8 @@ public:
 	  HAL_GPIO_WritePin({{PORTNAME}}, {{PINNAME}}_Pin, {{FUNCNAME}});  // а может это толь в метод write??
 	  
 	  GPIO_InitStruct.Pin = {{PINNAME}}_Pin;
-	  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	  GPIO_InitStruct.Pull = GPIO_NOPULL;
-	  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	  HAL_GPIO_Init({{PORTNAME}}, &GPIO_InitStruct);
+	  {% for INIT in INITS %}{{INIT}}
+	  {% endfor %}HAL_GPIO_Init({{PORTNAME}}, &GPIO_InitStruct);
       
       mInit = true;
       return Status::SUCCESS;

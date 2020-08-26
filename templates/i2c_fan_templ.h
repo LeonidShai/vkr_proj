@@ -29,6 +29,12 @@ public:
 			return Status::SUCCESS;
 		}
 	}
+	
+	Status deinit() noexcept override {// так вот будет:
+		if(hi2c->Instance==I2C1){
+			return Status::SUCCESS;
+		}
+	}
 		
 	Status write(const uint16_t* devaddress, const uint8_t* buf, size_t size, size_t timeout) noexcept override {
 	
@@ -37,7 +43,7 @@ public:
         }
 			
 			// Запись из hal 
-		auto halStatus = HAL_I2C_Master_Transmit({{mI2Cx}}, {{devaddress}}, {{mBuffer}}, {{buffersize}}, {{timeout}});
+		auto halStatus = HAL_I2C_Master_Transmit(&hi2c1, devaddress, mBuffer, buffersize, timeout);
 			//HAL_SPI_Transmit({{mSPIx}}, {{mBufferuf}}, {{buffersize}}, {{timeout}});	// пример:
 			//HAL_SPI_Transmit({{GPIOB}}, {{SPI_BLE}}, {{buffersize}}, {{timeout}});  ннепонятно, где берём buffersize и timeout
         return Status::SUCCESS; 								//
@@ -50,7 +56,7 @@ public:
             return { Status::InvalidArgument, nullptr, 0U}
         }
     
-		auto halStatus = HAL_I2C_Master_Receive({{mI2Cx}}, {{devaddress}}, {{FAN}}, {{buffersize}}, {{timeout}})
+		auto halStatus = HAL_I2C_Master_Receive(&hi2c1, devaddress, mBuffer, buffersize, timeout)
 		return {Status::SUCCESS, mBuffer, bufferSize}
     }
 	
@@ -67,7 +73,7 @@ public:
     }
     
     const char* getPortName() const noexcept override {
-        return "{{PA1}}";  // откуда узнаём?
+        return "PB6", "PB7";
     }
 
 	bool mInit{false};			

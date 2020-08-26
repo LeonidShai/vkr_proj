@@ -30,6 +30,30 @@ def parser(filename):
     return num_str
 
 
+def parser_hal_msp(filename):
+
+    index = clang.cindex.Index.create()
+    tu = index.parse(filename)
+    node = tu.cursor
+
+    num_str = []
+
+    for c in node.get_children():
+        if c.location.file.name == filename:
+            if c.spelling == "HAL_I2C_MspDeInit":
+                for i in c.get_children():
+                    for k in i.get_tokens():
+                        if k.spelling == "HAL_GPIO_DeInit":
+                            num_str.append(k.location.line)
+
+            elif c.spelling == "HAL_UART_MspDeInit":
+                for i in c.get_children():
+                    for k in i.get_tokens():
+                        if k.spelling == "HAL_GPIO_DeInit":
+                            num_str.append(k.location.line)
+
+    return num_str
+
 def extract_string(filename, num_str):
     """
     Извлекает строку/строки из файла
@@ -84,6 +108,31 @@ def work_with_nstr(data_str):
             data_list_dict.append(data_dict)
 
     file.close()
+
+    return data_list_dict
+
+
+def work_with_nstr_msp(data_str):
+    data_list_dict = []  # список для словарей с требуемыми параметрами
+    # получение из каждой строки подстроки в скобках
+
+    for stroka in data_str:
+        s = int()
+        e = int()
+        for i in range(len(stroka)):
+            if stroka[i] == "(":
+                s = i+1
+            elif stroka[i] == ")":
+                e = i
+
+        # разделение полученной подстроки на параметры
+        a = stroka[s:e].split(", ")  # list of strings, with splitting
+        a[1] = a[1].split("|")
+
+        # data_dict = {"DEVICES": None}
+        # data_dict["DEVICES"] = a[1][0][:-4]
+
+        data_list_dict.append(a[1][0][:-4])
 
     return data_list_dict
 
@@ -144,21 +193,37 @@ def generation_powerbut_pins(data):
     return None
 
 
-def generation_spi_chipselect(data):
+def data_unification(l1, l2):
+    devices_list = []
+    dev = {"DEVICES": []}
+    for i in l1:
+        dev["DEVICES"].append(i["PINNAME"][:-4])
+    for i in l2:
+        dev["DEVICES"].append(i)
+    devices_list.append(dev)
+    return devices_list
+
+
+def generation_spi_chipselect(text_template, data):
     """
     Генерирует по шаблону spi_chipselect
     :param data: list (list of dict with spi devices)
     :return: None
     """
-    text_template = "./templates/spi_chipselect_templ.h"  # шаблон для автогенерации
+    # text_template = "./templates/spi_chipselect_templ.h"  # шаблон для автогенерации
     text = open(text_template).read()
     template = jinja2.Template(text)
     model = data[0]
     temp = template.render(model)
 
-    f = open("./stm32_project/spi_chipselect.h", "w")
-    f.writelines(temp)
-    f.close()
+    if "chipselect" in text_template:
+        f = open("./stm32_project/spi_chipselect.h", "w")
+        f.writelines(temp)
+        f.close()
+    else:
+        f = open("./stm32_project/id_periherial.h", "w")
+        f.writelines(temp)
+        f.close()
 
     return None
 
@@ -168,11 +233,14 @@ if __name__ == "__main__":
     # work_file = "D:\python\cubemx\Core\Src\main.c"
     # work_file = "D:\python\cubemx/all_powerbuttons\Core\Src\main.c"
     # work_file = "D:\python\cubemx/three_powerbuttons\Core\Src\main.c"
-    work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\main.c"
+    mainc_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\main.c"
+    hal_msp_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\stm32f1xx_hal_msp.c"
+    text_template_spi_chipselect = "./templates/spi_chipselect_templ.h"
+    text_template_id_periherial = "./templates/Periherial_id_templ.h"
 
-    number_str = parser(work_file)  # парсим номера нужных строк в файле
+    number_str = parser(mainc_work_file)  # парсим номера нужных строк в файле main.c
 
-    data_str = extract_string(work_file, number_str)  # извлечение нужных строк из заданного файла
+    data_str = extract_string(mainc_work_file, number_str)  # извлечение нужных строк из заданного файла main.c
     # print(data_str)
 
     l_d = work_with_nstr(data_str)  # работа со строками, получение списка словарей с данными
@@ -183,4 +251,17 @@ if __name__ == "__main__":
     l_s_d = spi_devices(l_d)  # какие устройства входят в spi
     # print(l_s_d)
 
-    generation_spi_chipselect(l_s_d)  # функция, генерирующая файл по шаблону для spi_chipselect
+    generation_spi_chipselect(text_template_spi_chipselect, l_s_d)  # функция, генерирующая файл по шаблону для spi_chipselect
+
+    number_str = parser_hal_msp(hal_msp_work_file)  # парсим номера нужных строк в файле hal_msp.c
+
+    data_str = extract_string(hal_msp_work_file, number_str)  # извлечение нужных строк из заданного файла hal_msp.c
+    # print(data_str)
+
+    ustr_msp = work_with_nstr_msp(data_str)  # какие устройства входят в hal_msp.c
+    # print(ustr_msp)
+
+    all_dev = data_unification(l_d, ustr_msp)
+    # print(all_dev)
+
+    generation_spi_chipselect(text_template_id_periherial, all_dev)

@@ -35,7 +35,7 @@ public:
         }
 			
 			// Запись из hal 
-		auto halStatus = HAL_UART_Transmit(mUARTx, mBuffer, bufferSize, timeout);
+		auto halStatus = HAL_UART_Transmit(&huart, mBuffer, bufferSize, timeout);
         return Status::SUCCESS; 							
 
 	}
@@ -46,7 +46,7 @@ public:
             return { Status::InvalidArgument, nullptr, 0U}
         }
     
-		auto halStatus = HAL_UART_Receive(mUARTx, mBuffer, bufferSize, timeout);
+		auto halStatus = HAL_UART_Receive(&huart, mBuffer, bufferSize, timeout);
 		return {Status::SUCCESS, mBuffer, bufferSize}
     }
 
@@ -63,7 +63,7 @@ public:
     }
     
     const char* getPortName() const noexcept override {
-        return "{{PA1}}";  // откуда узнаём?
+        return "{{PA1}}";
     }
 
 	bool mInit{false};		

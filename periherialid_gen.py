@@ -67,10 +67,6 @@ def create_skeleton(protocol_check_list):
     return None
 
 
-def periherial_id_gen(node, filename):
-    ...
-
-
 if __name__ == "__main__":
     # print("hey")
 
