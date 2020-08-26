@@ -49,7 +49,7 @@ public:
     }
 
     PeriherialID getPeriherialID() const noexcept override {
-        return {{IDKEY}}; //STM32PowerButton нужно сделать
+        return {{IDKEY}}; //STM32PowerButton
     };
     
     const char* getName() const noexcept override {
@@ -57,7 +57,7 @@ public:
     }
     
     const char* getPortName() const noexcept override {
-        return "{{PIN}}";  // откуда узнаём?
+        return "{{PIN}}";
     }
 
 bool mInit{false};
