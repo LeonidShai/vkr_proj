@@ -144,6 +144,7 @@ def pin_find(pin_name, file):
     :param file: str
     :return: str
     """
+    gpio_pin = str()
     for line in file:
         if pin_name in line:
             simple_list = line.split()

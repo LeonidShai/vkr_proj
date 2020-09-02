@@ -87,7 +87,7 @@ def work_with_nstr(data_str, data_init):
 
     data_list_dict = []  # список для словарей с требуемыми параметрами
     # получение из каждой строки подстроки в скобках
-    file = open("D:\python\cubemx\pbpin_spi_i2c\Core\Inc\main.h", "r")
+    # file = open("D:\python\cubemx\pbpin_spi_i2c\Core\Inc\main.h", "r")
     for stroka in data_str:
         schet = 0  # счетчик, нужен для data_dict["INITS"]
         s = int()
@@ -109,24 +109,26 @@ def work_with_nstr(data_str, data_init):
             data_dict["PINNAME"] = a[1][j]
             data_dict["FUNCNAME"] = a[2]
             data_dict["IDKEY"] = hex(binascii.crc32(str.encode("STM32"+a[1][j])))
-            data_dict["PIN"] = "P" + a[0][-1::] + pin_find(a[1][j], file)
+            data_dict["PIN"] = "P" + a[0][-1::] + pin_find(a[1][j])
             data_dict["INITS"] = data_init[schet]["INITS"]
             data_list_dict.append(data_dict)
 
         schet += 1
 
-    file.close()
+    # file.close()
 
     return data_list_dict
 
 
-def pin_find(pin_name, file):
+def pin_find(pin_name):
     """
     Парсинг номера пина, к кот. подключено устройство
     :param pin_name: str
     :param file: str (уже открытый файл)
     :return: str
     """
+    file = open("D:\python\cubemx\pbpin_spi_i2c\Core\Inc\main.h", "r")
+    gpio_pin = str()
     for line in file:
         if pin_name in line:
             simple_list = line.split()
@@ -134,6 +136,8 @@ def pin_find(pin_name, file):
             simple_list = gpio_pin.split("_")
             gpio_pin = simple_list[-1]
             break
+            
+    file.close()        
 
     return gpio_pin
 

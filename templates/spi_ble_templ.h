@@ -2,19 +2,25 @@
 
 #include "ISPIPin.h"
 
-class STM32{{SPI1}} : public ISpi {
-	
-	SPI_TypeDef* mSPIx={{GPIOB}}; 
+class STM32{{ISPINUM}} : public ISpi {
 
-	SPI1_CS_BLE mSPI1CSBLE;
-	SPI1_CS_MEM mSPI1CSMEM;
-	SPI_HandleTypeDef hspi1;
+	{% for PINNAME in PINNAMES %}stm32spi {{PINNAME}};
+	{% endfor %}
+	SPI_HandleTypeDef {{ISPINUM}};
 
 public:
 	Status init() noexcept override {
 		
-		mSPI1CSBLE.init();
-		mSPI1CSMEM.init();
+		{% for PINNAME in PINNAMES %}{{PINNAME}}.init();  // SPI1_SCK, SPI1_MISO, SPI1_MOSI
+		{% endfor %}
+		
+		{% for SPIDEV in SPIDEVS %}{{SPIDEV}}.init();  // BLE, MEM
+		{% endfor %}
+		
+		{% for INIT in INITS %}{{INIT}}
+		{% endfor %}
+		
+		/*
 		hspi1.Instance = SPI1;
 		hspi1.Init.Mode = SPI_MODE_MASTER;
 		hspi1.Init.Direction = SPI_DIRECTION_2LINES;
@@ -27,7 +33,9 @@ public:
 		hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
 		hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
 		hspi1.Init.CRCPolynomial = 10;
-		if (HAL_SPI_Init(&hspi1) != HAL_OK)
+		*/
+		
+		if (HAL_SPI_Init(&{{ISPINUM}}) != HAL_OK)
 			{
 				mInit = true;
 				return Status::SUCCESS;
@@ -49,30 +57,33 @@ public:
 		}
 		
 		
-		if (chipSelect == SPIChipSelect::MEM) {
-			mSPI1CSMEM.write(false);
-			
-			auto halStatus = HAL_SPI_Transmit({{mSPIx}}, {{mBufferuf}}, {{buffersize}}, {{timeout}});
-			
-			mSPI1CSMEM.write(true);
-			
-			if (halStatus != HAL_OK) {
-				// Все негативные ситуации
-				return Status::Error;
-			}
-		} else if (chipSelect == SPIChipSelect::BLE) {
-			mSPI1CSBLE.write(false);
-			
-			auto halStatus = HAL_SPI_Transmit({{mSPIx}}, {{mBufferuf}}, {{buffersize}}, {{timeout}});
-			
-			mSPI1CSBLE.write(true);
-			
-			if (halStatus != HAL_OK) {
-				// Все негативные ситуации
-				return Status::Error;
-			}
-			
-			
+		{% for I in range(CH) %}
+			{% if I == 0 %}
+				if (chipSelect == SPIChipSelect::{{SPIDEVS[I]}}) {
+					m{{ISPINUM}}CS{{SPIDEVS[I]}}.write(false);
+					
+					auto halStatus = HAL_SPI_Transmit(&{{ISPINUM}}, mBufferuf, buffersize, timeout);
+					
+					m{{ISPINUM}}CS{{SPIDEVS[I]}}.write(true);
+					
+					if (halStatus != HAL_OK) {
+						// Все негативные ситуации
+						return Status::Error;
+					}
+			{% else %}
+				}else if (chipSelect == SPIChipSelect::{{SPIDEVS[I]}}) {  // BLE
+					m{{ISPINUM}}CS{{SPIDEVS[I]}}.write(false);
+					
+					auto halStatus = HAL_SPI_Transmit(&{{ISPINUM}}, mBufferuf, buffersize, timeout);
+					
+					m{{ISPINUM}}CS{{SPIDEVS[I]}}.write(true);
+					
+					if (halStatus != HAL_OK) {
+						// Все негативные ситуации
+						return Status::Error;
+					}
+			{% endif %}
+		{% endfor %}	
 		} else {
 			
 			return Status::INVALID_ARG;
@@ -90,7 +101,7 @@ public:
             return { Status::InvalidArgument, nullptr, 0U };
         }
     
-		auto halStatus = HAL_SPI_Receive(mSPIx, mBuffer, bufferSize, timeout);
+		auto halStatus = HAL_SPI_Receive(&{{ISPINUM}}, mBuffer, bufferSize, timeout);
 		return {Status::SUCCESS, mBuffer, bufferSize};
     }
 		
@@ -99,15 +110,15 @@ public:
     }
 
     PeriherialID getPeriherialID() const noexcept override {
-        return {{0xc50864f7}}; //STM32SPI1
+        return {{CRCID}}; //STM32SPI1
     };
     
     const char* getName() const noexcept override {
-        return "{{STM32SPI1}}";
+        return "STM32{{NAME}}";
     }
     
     const char* getPortName() const noexcept override {
-        return "{{PA1}}";  // откуда узнаём?
+        return "{{PIN1}}", "{{PIN2}}", "{{PIN3}}";  // откуда узнаём?
     }
 
 	bool mInit{false};	

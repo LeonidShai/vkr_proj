@@ -2,26 +2,31 @@
 
 #include "I_UART.h"
 
-class STM32{{UARTDEVICE}} : public IUart {
+class STM32{{NAME}} : public IUart {
 	
 private:
 
-	stm32UART device;
-	UART_HandleTypeDef huart;
+	{% for PINNAME in PINNAMES %}stm32uart {{PINNAME}};
+	{% endfor %}
+	UART_HandleTypeDef {{I2CNUM}};
 
 public:
 	Status init() noexcept override {
-		device.init();
+		{% for PINNAME in PINNAMES %}{{PINNAME}}.init();
+		{% endfor %}
 		
-		huart1.Instance = USART1;
-		huart1.Init.BaudRate = 115200;
-		huart1.Init.WordLength = UART_WORDLENGTH_8B;
-		huart1.Init.StopBits = UART_STOPBITS_1;
-		huart1.Init.Parity = UART_PARITY_NONE;
-		huart1.Init.Mode = UART_MODE_TX_RX;
-		huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-		huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-		if (HAL_UART_Init(&huart) != HAL_OK)
+		{% for INIT in INITS %}{{INIT}}
+		{% endfor %}
+		
+		//huart1.Instance = USART1;
+		//huart1.Init.BaudRate = 115200;
+		//huart1.Init.WordLength = UART_WORDLENGTH_8B;
+		//huart1.Init.StopBits = UART_STOPBITS_1;
+		//huart1.Init.Parity = UART_PARITY_NONE;
+		//huart1.Init.Mode = UART_MODE_TX_RX;
+		//huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+		//huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+		if (HAL_UART_Init(&{{I2CNUM}}) != HAL_OK)
 		{
 			mInit = true;
 			return Status::SUCCESS;
@@ -35,7 +40,7 @@ public:
         }
 			
 			// Запись из hal 
-		auto halStatus = HAL_UART_Transmit(&huart, mBuffer, bufferSize, timeout);
+		auto halStatus = HAL_UART_Transmit(&{{I2CNUM}}, mBuffer, bufferSize, timeout);
         return Status::SUCCESS; 							
 
 	}
@@ -46,7 +51,7 @@ public:
             return { Status::InvalidArgument, nullptr, 0U}
         }
     
-		auto halStatus = HAL_UART_Receive(&huart, mBuffer, bufferSize, timeout);
+		auto halStatus = HAL_UART_Receive(&{{I2CNUM}}, mBuffer, bufferSize, timeout);
 		return {Status::SUCCESS, mBuffer, bufferSize}
     }
 
@@ -55,15 +60,15 @@ public:
     }
 
     PeriherialID getPeriherialID() const noexcept override {
-        return {{0x81d89d2a}}; //STM32UARTDEVICE
+        return {{CRCID}}; //STM32UARTDEVICE
     };
     
     const char* getName() const noexcept override {
-        return "{{STM32UARTDEVICE}}";
+        return "STM32{{NAME}}";
     }
     
     const char* getPortName() const noexcept override {
-        return "{{PA1}}";
+        return "{{PIN1}}", "{{PIN2}}";
     }
 
 	bool mInit{false};		
