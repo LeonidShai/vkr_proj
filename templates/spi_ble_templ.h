@@ -2,19 +2,16 @@
 
 #include "ISPIPin.h"
 
-class STM32{{ISPINUM}} : public ISpi {
+class STM32{{SPINAME}} : public ISpi {
 
 	{% for PINNAME in PINNAMES %}stm32spi {{PINNAME}};
 	{% endfor %}
-	SPI_HandleTypeDef {{ISPINUM}};
+	SPI_HandleTypeDef {{SPINUM}};  // hspi1, hspi2
 
 public:
 	Status init() noexcept override {
 		
-		{% for PINNAME in PINNAMES %}{{PINNAME}}.init();  // SPI1_SCK, SPI1_MISO, SPI1_MOSI
-		{% endfor %}
-		
-		{% for SPIDEV in SPIDEVS %}{{SPIDEV}}.init();  // BLE, MEM
+		{% for PINNAME in PINNAMES %}{{PINNAME}}.init();  // SPI1_SCK, SPI1_MISO, SPI1_MOSI, BLE, MEM
 		{% endfor %}
 		
 		{% for INIT in INITS %}{{INIT}}
@@ -35,7 +32,7 @@ public:
 		hspi1.Init.CRCPolynomial = 10;
 		*/
 		
-		if (HAL_SPI_Init(&{{ISPINUM}}) != HAL_OK)
+		if (HAL_SPI_Init(&{{SPINUM}}) != HAL_OK)
 			{
 				mInit = true;
 				return Status::SUCCESS;
@@ -60,11 +57,11 @@ public:
 		{% for I in range(CH) %}
 			{% if I == 0 %}
 				if (chipSelect == SPIChipSelect::{{SPIDEVS[I]}}) {
-					m{{ISPINUM}}CS{{SPIDEVS[I]}}.write(false);
+					m{{SPINUM}}CS{{SPIDEVS[I]}}.write(false);
 					
-					auto halStatus = HAL_SPI_Transmit(&{{ISPINUM}}, mBufferuf, buffersize, timeout);
+					auto halStatus = HAL_SPI_Transmit(&{{SPINUM}}, mBufferuf, buffersize, timeout);
 					
-					m{{ISPINUM}}CS{{SPIDEVS[I]}}.write(true);
+					m{{SPINUM}}CS{{SPIDEVS[I]}}.write(true);
 					
 					if (halStatus != HAL_OK) {
 						// Все негативные ситуации
@@ -74,9 +71,9 @@ public:
 				}else if (chipSelect == SPIChipSelect::{{SPIDEVS[I]}}) {  // BLE
 					m{{ISPINUM}}CS{{SPIDEVS[I]}}.write(false);
 					
-					auto halStatus = HAL_SPI_Transmit(&{{ISPINUM}}, mBufferuf, buffersize, timeout);
+					auto halStatus = HAL_SPI_Transmit(&{{SPINUM}}, mBufferuf, buffersize, timeout);
 					
-					m{{ISPINUM}}CS{{SPIDEVS[I]}}.write(true);
+					m{{SPINUM}}CS{{SPIDEVS[I]}}.write(true);
 					
 					if (halStatus != HAL_OK) {
 						// Все негативные ситуации
@@ -101,7 +98,7 @@ public:
             return { Status::InvalidArgument, nullptr, 0U };
         }
     
-		auto halStatus = HAL_SPI_Receive(&{{ISPINUM}}, mBuffer, bufferSize, timeout);
+		auto halStatus = HAL_SPI_Receive(&{{SPINUM}}, mBuffer, bufferSize, timeout);
 		return {Status::SUCCESS, mBuffer, bufferSize};
     }
 		
@@ -114,7 +111,7 @@ public:
     };
     
     const char* getName() const noexcept override {
-        return "STM32{{NAME}}";
+        return "STM32{{SPINAME}}";
     }
     
     const char* getPortName() const noexcept override {
