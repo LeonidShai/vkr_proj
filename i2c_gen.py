@@ -2,6 +2,7 @@ import clang.cindex
 import binascii
 import jinja2
 
+
 def parser_quant_i2c(filename, who):
     """
     Парсит количество i2c

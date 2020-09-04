@@ -202,6 +202,7 @@ def generation_myfactory_periph(model):
 
     return None
 
+
 def maybe_main_myfactory():
     """
     Как бы основная функция

@@ -3,6 +3,45 @@ import binascii
 import jinja2
 
 
+def quant_prot(protocols, who):
+    """
+    Разделение на отдельные списки протоколов
+    :param protocols: list
+    :return: list (names protocols)
+    """
+    quant_prot = []
+
+    for elem in protocols:
+        if who in elem:
+            quant_prot.append(elem)
+
+    return quant_prot
+
+
+def protocol_checker(filename):
+    """
+    Проверка наличия протоколов Pin, I2C, SPI, UART
+    :param node: clang.cindex.node
+    :param filename: str
+    :return: list
+    """
+    index = clang.cindex.Index.create()
+    tu = index.parse(filename)
+    node = tu.cursor
+
+    protocol_check_list = []
+
+    for c in node.get_children():
+        if c.location.file.name == filename:
+            if c.spelling == "main":
+                for i in c.get_children():
+                    for k in i.get_children():
+                        if k.spelling and k.spelling != "HAL_Init" and k.spelling != "SystemClock_Config":
+                            protocol_check_list.append(k.spelling)
+
+    return protocol_check_list
+
+
 def parser(filename):
     """
     Парсит номерa строк в файле с требуемыми функциями
@@ -104,13 +143,14 @@ def work_with_nstr(data_str, data_init):
 
         # создание словаря с нужными параметрами и добаление в список (59)
         for j in range(len(a[1])):
-            data_dict = {"PORTNAME": None, "PINNAME": None, "FUNCNAME": None, "IDKEY": None, "PIN": None, "INITS": None}
-            data_dict["PORTNAME"] = a[0]
-            data_dict["PINNAME"] = a[1][j]
-            data_dict["FUNCNAME"] = a[2]
-            data_dict["IDKEY"] = hex(binascii.crc32(str.encode("STM32"+a[1][j])))
-            data_dict["PIN"] = "P" + a[0][-1::] + pin_find(a[1][j])
-            data_dict["INITS"] = data_init[schet]["INITS"]
+            data_dict = {a[1][j][:-4]: {"PORTNAME": None, "PINNAME": None, "FUNCNAME": None,
+                                        "IDKEY": None, "PIN": None, "INITS": None}}
+            data_dict[a[1][j][:-4]]["PORTNAME"] = a[0]
+            data_dict[a[1][j][:-4]]["PINNAME"] = a[1][j][:-4]
+            data_dict[a[1][j][:-4]]["FUNCNAME"] = a[2]
+            data_dict[a[1][j][:-4]]["IDKEY"] = hex(binascii.crc32(str.encode("STM32"+a[1][j])))
+            data_dict[a[1][j][:-4]]["PIN"] = "P" + a[0][-1::] + pin_find(a[1][j])
+            data_dict[a[1][j][:-4]]["INITS"] = data_init[schet]["INITS"]
             data_list_dict.append(data_dict)
 
         schet += 1
@@ -164,20 +204,44 @@ def generation_powerbut_pins(data):
     return None
 
 
-if __name__ == "__main__":
-
+def maybe_main_gpiogen():
+    """
+    Основная функция
+    :return: None
+    """
     main_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\main.c"
+    hal_msp_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\stm32f1xx_hal_msp.c"
+    template_gpiopin = "./templates/powbut_templ.h"
 
-    num_hal_write, num_init = parser(main_work_file)
-    # print(num_hal_write, num_init)
+    protocols = protocol_checker(main_work_file)  # все имеющиеся протоколы
+    print(protocols)
 
-    data_str = extract_string(main_work_file, num_hal_write)
-    # print(data_str)
+    num_hal_write, num_init = parser(main_work_file)  # номера строк HalWritePin и начало Init
+    print(num_hal_write, num_init)
 
-    data_init = extract_initstruct(main_work_file, num_init)
-    # print(data_init)
+    data_str_main = extract_string(main_work_file, num_hal_write)  # строки HalWritePin
+    print(data_str_main)
+    data_init = extract_initstruct(main_work_file, num_init)  # строки Init
+    print(data_init)
 
-    data_list_dict = work_with_nstr(data_str, data_init)
+    if "I2C" in protocols:
+        i2c_protocols = quant_prot(protocols, "I2C")
+        i2c_list_dict = i2c_main(i2c_protocols, hal_msp_work_file)
+
+    if "UART" in protocols:
+        uart_protocols = quant_prot(protocols, "UART")
+        uart_list_dict = uart_main(uart_protocols, hal_msp_work_file)
+
+    if "SPI" in protocols:
+        spi_protocols = quant_prot(protocols, "SPI")
+        spi_list_dict = spi_main(spi_protocols, hal_msp_work_file)
+
+    data_list_dict = work_with_nstr(data_str_main, data_init)  # соединение воедино всех данных
     print(data_list_dict)
 
-    generation_powerbut_pins(data_list_dict)
+    generation_powerbut_pins(data_list_dict)  # генерирование по шаблону gpio_pin
+    return None
+
+
+if __name__ == "__main__":
+    maybe_main_gpiogen()
