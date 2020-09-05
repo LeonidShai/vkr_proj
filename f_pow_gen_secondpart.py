@@ -3,7 +3,7 @@ import clang.cindex
 import binascii
 
 
-def parser_deinit(filename):
+def parser_deinit(filename, param):
     """
     парсим номера строк HAL_GPIO_DeInit
     :param filename:
@@ -17,7 +17,7 @@ def parser_deinit(filename):
 
     for c in node.get_children():
         if c.location.file.name == filename:
-            if c.spelling == "HAL_SPI_MspDeInit":  # I2C, UART
+            if c.spelling == "HAL_"+param+"_MspDeInit":  # I2C, UART
                 for i in c.get_children():
                     for k in i.get_tokens():
                         if k.spelling == "HAL_GPIO_DeInit":
@@ -26,7 +26,7 @@ def parser_deinit(filename):
     return num_str
 
 
-def parser_init(filename):
+def parser_init(filename, param):
     """
     Парсер номеров строк для INIT и для PIN (PB6, PB7 ..)
     :param filename:
@@ -41,7 +41,7 @@ def parser_init(filename):
 
     for c in node.get_children():
         if c.location.file.name == filename:
-            if c.spelling == "HAL_SPI_MspInit":  # I2C, UART
+            if c.spelling == "HAL_"+param+"_MspInit":  # I2C, UART
                 for i in c.get_children():
                     for k in i.get_tokens():
                         if "Configuration" in k.spelling:
@@ -124,15 +124,22 @@ def work_with_deinit_str(deinit_str):
     return data_deinit
 
 
-def work_with_pins_str(pins_str):
+def work_with_pins_str(pins_str, param):
     """
     Извлечение пинов PB6, PB7 ...
     :param pins_str: list список со строками
     :return: list список пинов
     """
+    if param == "I2C":
+        devider = "SCL"
+    elif param == "UART":
+        devider = "TX"
+    else:
+        ...
+
     pins_list = []
     for i in pins_str:
-        i = i.split("TX")  # SCL для I2C, TX для UART
+        i = i.split(devider)  # SCL для I2C, TX для UART
         pins_list.append(i[0][:4].rstrip())
         pins_list.append(i[1][:4].rstrip())
 
@@ -172,29 +179,29 @@ def quant_test(filename, numstrs):
     return quant_sticks
 
 
-def i2c_main(hal_msp_work_file):
+def i2c_main(hal_msp_work_file, param):
     """
     Как бы основная функция
     :param hal_msp_work_file: str (fiename)
     :return: list список словарей с основными параметрами для каждого пина
     """
-    numstr_deinit = parser_deinit(hal_msp_work_file)  # парсим номера строк HAL_GPIO_DeInit
+    numstr_deinit = parser_deinit(hal_msp_work_file, param)  # парсим номера строк HAL_GPIO_DeInit
     # print(numstr_deinit)
     deinit_str = extract_str(hal_msp_work_file, numstr_deinit)  # вытаскиваем строки HAL_GPIO_DeInit
     print(deinit_str)
     data_deinit = work_with_deinit_str(deinit_str)  # собираем из HAL_GPIO_DeInit нужные параметры
     print(data_deinit)
 
-    numstr_pins, numstr_init = parser_init(hal_msp_work_file)  # парсим номера строк Init
+    numstr_pins, numstr_init = parser_init(hal_msp_work_file, param)  # парсим номера строк Init
     print(numstr_pins, numstr_init)
 
     pins_str = extract_str(hal_msp_work_file, numstr_pins)  # извлечение строк с номерами пинов
     print(pins_str)
-    pins_list = work_with_pins_str(pins_str)  # получение списка пинов
+    pins_list = work_with_pins_str(pins_str, param)  # получение списка пинов
     print(pins_list)
 
     sticks = quant_test(hal_msp_work_file, numstr_init)  # количество разделителей для числа повторений
-    # print(sticks)
+    print(sticks)
     init_strs = special_extract(hal_msp_work_file, numstr_init, sticks)  # извлечение строк с INIT
     print(init_strs)
 
@@ -205,4 +212,5 @@ def i2c_main(hal_msp_work_file):
 
 
 if __name__ == "__main__":
-    i2c_main("D:\python\cubemx\pbpin_spi_i2c\Core\Src\stm32f1xx_hal_msp.c")
+    param = "UART"  # I2C, UART
+    i2c_main("D:\python\cubemx\pbpin_spi_i2c\Core\Src\stm32f1xx_hal_msp.c", param)
