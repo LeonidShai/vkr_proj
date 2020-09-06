@@ -1,4 +1,4 @@
-# работает для I2C и UART
+# работает для I2C и UART и SPI
 import clang.cindex
 import binascii
 
@@ -17,7 +17,7 @@ def parser_deinit(filename, param):
 
     for c in node.get_children():
         if c.location.file.name == filename:
-            if c.spelling == "HAL_"+param+"_MspDeInit":  # I2C, UART
+            if c.spelling == "HAL_"+param+"_MspDeInit":  # I2C, UART, SPI
                 for i in c.get_children():
                     for k in i.get_tokens():
                         if k.spelling == "HAL_GPIO_DeInit":
@@ -41,15 +41,16 @@ def parser_init(filename, param):
 
     for c in node.get_children():
         if c.location.file.name == filename:
-            if c.spelling == "HAL_"+param+"_MspInit":  # I2C, UART
+            if c.spelling == "HAL_"+param+"_MspInit":  # I2C, UART, SPI
                 for i in c.get_children():
                     for k in i.get_tokens():
                         if "Configuration" in k.spelling:
-                            numstr_pins.append(k.location.line+1)
+                            numstr_pins.append(k.location.line + 1)
+                            # numstr_pins.append(k.location.line + 2)
                         elif k.spelling == "Pin":
-                            start_end = [k.location.line+1]
+                            start_end = [k.location.line + 1]
                         elif k.spelling == "HAL_GPIO_Init":
-                            start_end.append(k.location.line-1)
+                            start_end.append(k.location.line - 1)
                             numstr_init.append(start_end)
 
     return numstr_pins, numstr_init
@@ -57,7 +58,7 @@ def parser_init(filename, param):
 
 def extract_str(filename, numstr):
     """
-    Извлечение по номерам строк самих строк из файлов
+    Извлечение по номерам строк самих строк из файлов, подходит для I2C, UART
     :param filename: str
     :param numstr: list список номеров строк
     :return: list список строк
@@ -66,10 +67,30 @@ def extract_str(filename, numstr):
     file = open(filename, 'r')
     lines = file.read().splitlines()
     for i in numstr:
-        if lines[i - 1][-1] != ";":
-            deinit_str.append(lines[i - 1].lstrip() + lines[i].lstrip())
+        if lines[i-1][-1] != ";":
+            deinit_str.append(lines[i-1].lstrip() + lines[i].lstrip())
         else:
-            deinit_str.append(lines[i - 1].lstrip())
+            deinit_str.append(lines[i-1].lstrip())
+    file.close()
+
+    return deinit_str
+
+
+def spi_extract_str(filename, numstr):
+    """
+    Извлечение по номерам строк самих строк из файлов только для SPI
+    :param filename: str
+    :param numstr: list список номеров строк
+    :return: list список строк
+    """
+    deinit_str = []  # список требуемых строк
+    file = open(filename, 'r')
+    lines = file.read().splitlines()
+    for i in numstr:
+        if lines[i-1][-1] != ";":
+            deinit_str.append(lines[i-1].lstrip() + lines[i].lstrip() + lines[i+1].lstrip())
+        else:
+            deinit_str.append(lines[i-1].lstrip())
     file.close()
 
     return deinit_str
@@ -114,11 +135,11 @@ def work_with_deinit_str(deinit_str):
         a[1] = a[1].split("|")
 
         for j in range(len(a[1])):
-            data_dict = {a[1][j][:-4]: {"PORTNAME": None, "PINNAME": None, "IDKEY": None,
-                                        "PIN": None, "INITS": None}}
-            data_dict[a[1][j][:-4]]["PORTNAME"] = a[0]
-            data_dict[a[1][j][:-4]]["PINNAME"] = a[1][j][:-4]
-            data_dict[a[1][j][:-4]]["IDKEY"] = hex(binascii.crc32(str.encode("STM32"+a[1][j][:-4])))
+            data_dict = {a[1][j]: {"PORTNAME": None, "PINNAME": None, "IDKEY": None,
+                                   "PIN": None, "INITS": None}}
+            data_dict[a[1][j]]["PORTNAME"] = a[0]
+            data_dict[a[1][j]]["PINNAME"] = a[1][j]
+            data_dict[a[1][j]]["IDKEY"] = hex(binascii.crc32(str.encode("STM32"+a[1][j])))
             data_deinit.append(data_dict)
 
     return data_deinit
@@ -138,10 +159,19 @@ def work_with_pins_str(pins_str, param):
         ...
 
     pins_list = []
-    for i in pins_str:
-        i = i.split(devider)  # SCL для I2C, TX для UART
-        pins_list.append(i[0][:4].rstrip())
-        pins_list.append(i[1][:4].rstrip())
+    if param == "SPI":
+        for i in pins_str:
+            i = i.split("SCK")
+            pins_list.append(i[0][:4].rstrip())
+            i = i[1].split("MISO")
+            pins_list.append(i[0][:4].rstrip())
+            pins_list.append(i[1][:4].rstrip())
+
+    else:
+        for i in pins_str:
+            i = i.split(devider)  # SCL для I2C, TX для UART
+            pins_list.append(i[0][:4].rstrip())
+            pins_list.append(i[1][:4].rstrip())
 
     return pins_list
 
@@ -179,7 +209,7 @@ def quant_test(filename, numstrs):
     return quant_sticks
 
 
-def i2c_main(hal_msp_work_file, param):
+def device_main(hal_msp_work_file, param):
     """
     Как бы основная функция
     :param hal_msp_work_file: str (fiename)
@@ -188,29 +218,33 @@ def i2c_main(hal_msp_work_file, param):
     numstr_deinit = parser_deinit(hal_msp_work_file, param)  # парсим номера строк HAL_GPIO_DeInit
     # print(numstr_deinit)
     deinit_str = extract_str(hal_msp_work_file, numstr_deinit)  # вытаскиваем строки HAL_GPIO_DeInit
-    print(deinit_str)
+    # print(deinit_str)
     data_deinit = work_with_deinit_str(deinit_str)  # собираем из HAL_GPIO_DeInit нужные параметры
-    print(data_deinit)
+    # print(data_deinit)
 
     numstr_pins, numstr_init = parser_init(hal_msp_work_file, param)  # парсим номера строк Init
-    print(numstr_pins, numstr_init)
+    # print(numstr_pins, numstr_init)
 
-    pins_str = extract_str(hal_msp_work_file, numstr_pins)  # извлечение строк с номерами пинов
-    print(pins_str)
+    if param == "SPI":
+        pins_str = spi_extract_str(hal_msp_work_file, numstr_pins)  # извлечение строк с номерами пинов
+        # print(pins_str)
+    else:
+        pins_str = extract_str(hal_msp_work_file, numstr_pins)  # извлечение строк с номерами пинов
+        # print(pins_str)
     pins_list = work_with_pins_str(pins_str, param)  # получение списка пинов
-    print(pins_list)
+    # print(pins_list)
 
     sticks = quant_test(hal_msp_work_file, numstr_init)  # количество разделителей для числа повторений
-    print(sticks)
+    # print(sticks)
     init_strs = special_extract(hal_msp_work_file, numstr_init, sticks)  # извлечение строк с INIT
-    print(init_strs)
+    # print(init_strs)
 
     data_all = unification(data_deinit, pins_list, init_strs)  # все данные в однин список словарей
-    print(data_all)
+    # print(data_all)
 
     return data_all
 
 
 if __name__ == "__main__":
-    param = "UART"  # I2C, UART
-    i2c_main("D:\python\cubemx\pbpin_spi_i2c\Core\Src\stm32f1xx_hal_msp.c", param)
+    param = "UART"  # I2C, UART, SPI
+    device_main("D:\python\cubemx\pbpin_spi_i2c\Core\Src\stm32f1xx_hal_msp.c", param)

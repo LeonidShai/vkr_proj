@@ -2,6 +2,8 @@ import clang.cindex
 import binascii
 import jinja2
 
+import f_pow_gen_secondpart
+
 
 def quant_prot(protocols, who):
     """
@@ -143,14 +145,13 @@ def work_with_nstr(data_str, data_init):
 
         # создание словаря с нужными параметрами и добаление в список (59)
         for j in range(len(a[1])):
-            data_dict = {a[1][j][:-4]: {"PORTNAME": None, "PINNAME": None, "FUNCNAME": None,
-                                        "IDKEY": None, "PIN": None, "INITS": None}}
-            data_dict[a[1][j][:-4]]["PORTNAME"] = a[0]
-            data_dict[a[1][j][:-4]]["PINNAME"] = a[1][j][:-4]
-            data_dict[a[1][j][:-4]]["FUNCNAME"] = a[2]
-            data_dict[a[1][j][:-4]]["IDKEY"] = hex(binascii.crc32(str.encode("STM32"+a[1][j])))
-            data_dict[a[1][j][:-4]]["PIN"] = "P" + a[0][-1::] + pin_find(a[1][j])
-            data_dict[a[1][j][:-4]]["INITS"] = data_init[schet]["INITS"]
+            data_dict = {a[1][j]: {"PORTNAME": None, "PINNAME": None, "IDKEY": None,
+                                   "PIN": None, "INITS": None}}
+            data_dict[a[1][j]]["PORTNAME"] = a[0]
+            data_dict[a[1][j]]["PINNAME"] = a[1][j]
+            data_dict[a[1][j]]["IDKEY"] = hex(binascii.crc32(str.encode("STM32"+a[1][j])))
+            data_dict[a[1][j]]["PIN"] = "P" + a[0][-1::] + pin_find(a[1][j])
+            data_dict[a[1][j]]["INITS"] = data_init[schet]["INITS"]
             data_list_dict.append(data_dict)
 
         schet += 1
@@ -195,7 +196,8 @@ def generation_powerbut_pins(data):
     # генерация файла с классами для всех powerbuttons_pins
     f = open("./stm32_project/gpio_pins.h", "w")
     for i in range(len(data)):
-        model = data[i]
+        for key in data[i].keys():
+            model = data[i][key]
         temp = template.render(model)
         f.writelines(temp)
         f.writelines("\n\n\n")
@@ -224,21 +226,23 @@ def maybe_main_gpiogen():
     data_init = extract_initstruct(main_work_file, num_init)  # строки Init
     print(data_init)
 
-    if "I2C" in protocols:
-        i2c_protocols = quant_prot(protocols, "I2C")
-        i2c_list_dict = i2c_main(i2c_protocols, hal_msp_work_file)
-
-    if "UART" in protocols:
-        uart_protocols = quant_prot(protocols, "UART")
-        uart_list_dict = uart_main(uart_protocols, hal_msp_work_file)
-
-    if "SPI" in protocols:
-        spi_protocols = quant_prot(protocols, "SPI")
-        spi_list_dict = spi_main(spi_protocols, hal_msp_work_file)
-
     data_list_dict = work_with_nstr(data_str_main, data_init)  # соединение воедино всех данных
     print(data_list_dict)
 
+    if "I2C" in protocols:
+        i2c_list_dict = f_pow_gen_secondpart.device_main(hal_msp_work_file, "I2C")
+        print(i2c_list_dict)
+        data_list_dict = data_list_dict + i2c_list_dict
+
+    if "UART" in protocols:
+        uart_list_dict = f_pow_gen_secondpart.device_main(hal_msp_work_file, "UART")
+        data_list_dict = data_list_dict + uart_list_dict
+
+    if "SPI" in protocols:
+        spi_list_dict = f_pow_gen_secondpart.device_main(hal_msp_work_file, "SPI")
+        data_list_dict = data_list_dict + spi_list_dict
+
+    # print(data_list_dict)
     generation_powerbut_pins(data_list_dict)  # генерирование по шаблону gpio_pin
     return None
 

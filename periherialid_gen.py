@@ -141,21 +141,21 @@ def works_with_main_str(mains_str, dop=None):
                 key = "SPI" + pin_name[3]
                 if not key in data_dict:
                     data_dict[key] = [key+"_SCK", key+"_MISO", key+"_MOSI"]
-                data_dict[key].append(pin_name[:-4])
+                data_dict[key].append(pin_name)
             elif "I2C" in pin_name:
                 key = dop[count]
                 if not key in data_dict:
                     data_dict[key] = []
-                data_dict[key].append(pin_name[:-4])
+                data_dict[key].append(pin_name)
             elif "UART" in pin_name:
                 key = dop[count]
                 if not key in data_dict:
                     data_dict[key] = []
-                data_dict[key].append(pin_name[:-4])
+                data_dict[key].append(pin_name)
             else:
                 if not "PIN" in data_dict:
                     data_dict["PIN"] = []
-                data_dict["PIN"].append(pin_name[:-4])
+                data_dict["PIN"].append(pin_name)
         count += 1
 
     return data_dict
@@ -190,6 +190,37 @@ def create_skeleton(protocol_check_list):
     return None
 
 
+def generate_periherial_factory(protocol_list):
+    """
+    генерирование periherial_factory.h
+    :param text_template: str
+    :param protocol_list: list
+    :return: None
+    """
+    main_protocol_list = []
+    for i in protocol_list:
+        if "I2C" in i and not "I2C" in main_protocol_list:
+            main_protocol_list.append("I2C")
+        elif "UART" in i and not "UART" in main_protocol_list:
+            main_protocol_list.append("UART")
+        elif "SPI" in i and not "SPI" in main_protocol_list:
+            main_protocol_list.append("SPI")
+        elif "GPIO" in i and not "GPIO" in main_protocol_list:
+            main_protocol_list.append("PIN")
+
+    text_template = "./templates/periherial_factory.h"
+    text = open(text_template).read()
+    template = jinja2.Template(text)
+    model = {"PERIPS": main_protocol_list}
+    temp = template.render(model)
+
+    f = open("./stm32_project/periherial_factory.h", "w")
+    f.writelines(temp)
+    f.close()
+
+    return None
+
+
 def generation_myfactory_periph(model):
     text_template = "./templates/myfactory_peripherals.h"
     text = open(text_template).read()
@@ -213,6 +244,9 @@ def maybe_main_myfactory():
 
     protocols = protocol_checker(main_work_file)  # какие протоколы использованы
     print(protocols)
+    create_skeleton(protocols)  # создание основного скелета
+    generate_periherial_factory(protocols)  # генерирование periherial_factory
+
     num_str_from_main = parser_main(main_work_file)  # парсим main.с на предмет строк
     list_str_main = extract_string(num_str_from_main, main_work_file)
     # получаем строки с HAL_GPIO_WritePin из main.c
@@ -249,35 +283,7 @@ def maybe_main_myfactory():
 
     return None
 
-    
-def generate_periherial_factory(text_template, protocol_list):
-    """
-    генерирование periherial_factory.h
-    :param text_template: str
-    :param protocol_list: list
-    :return: None
-    """
-    text = open(text_template).read()
-    template = jinja2.Template(text)
-    model = {"PERIPS": protocol_list}
-    temp = template.render(model)
-    
-    f = open("./stm32_project/periherial_factory.h", "w")
-    f.writelines(temp)
-    f.close()
-    
-    return None
-
 
 if __name__ == "__main__":
-    # print("hey")
-
-    # first_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\main.c"
-    # second_work_file = "./templates/periherial_factory.h"
-    #
-    # prot_ch_lst = protocol_checker(first_work_file)
-    # create_skeleton(prot_ch_lst)
-    #
-    # generate_periherial_factory(second_work_file, prot_ch_lst)  # генерирование periherial_factory
 
     maybe_main_myfactory()

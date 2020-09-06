@@ -17,8 +17,6 @@ public:
 	  
 	  __HAL_RCC_{{PORTNAME}}_CLK_ENABLE();
 	  
-	  HAL_GPIO_WritePin({{PORTNAME}}, {{PINNAME}}_Pin, {{FUNCNAME}});  // а может это толь в метод write??
-	  
 	  GPIO_InitStruct.Pin = {{PINNAME}}_Pin;
 	  {% for INIT in INITS %}{{INIT}}
 	  {% endfor %}HAL_GPIO_Init({{PORTNAME}}, &GPIO_InitStruct);
@@ -38,7 +36,7 @@ public:
     Status write(bool state) noexcept override {
         if (mInit) {
             auto pinState = state ? GPIO_PIN_SET : GPIO_PIN_RESET;
-            HAL_GPIO_WritePin({{PORTNAME}}, {{PINNAME}}, {{FUNCNAME}});
+            HAL_GPIO_WritePin({{PORTNAME}}, {{PINNAME}}, GPIO_PIN_RESET);
             return Status::SUCCESS;
         }
         return Status::NOT_INIT;
