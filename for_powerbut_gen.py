@@ -5,7 +5,7 @@ import jinja2
 import f_pow_gen_secondpart
 
 
-def quant_prot(protocols, who):
+def quant_prot(protocols):
     """
     Разделение на отдельные списки протоколов
     :param protocols: list
@@ -14,8 +14,14 @@ def quant_prot(protocols, who):
     quant_prot = []
 
     for elem in protocols:
-        if who in elem:
-            quant_prot.append(elem)
+        if "GPIO" in elem and not "GPIO" in quant_prot:
+            quant_prot.append("GPIO")
+        elif "I2C" in elem and not "I2C" in quant_prot:
+            quant_prot.append("I2C")
+        elif "SPI" in elem and not "SPI" in quant_prot:
+            quant_prot.append("SPI")
+        elif "UART" in elem and not "UART" in quant_prot:
+            quant_prot.append("UART")
 
     return quant_prot
 
@@ -219,30 +225,30 @@ def maybe_main_gpiogen():
     print(protocols)
 
     num_hal_write, num_init = parser(main_work_file)  # номера строк HalWritePin и начало Init
-    print(num_hal_write, num_init)
+    # print(num_hal_write, num_init)
 
     data_str_main = extract_string(main_work_file, num_hal_write)  # строки HalWritePin
-    print(data_str_main)
+    # print(data_str_main)
     data_init = extract_initstruct(main_work_file, num_init)  # строки Init
-    print(data_init)
+    # print(data_init)
 
     data_list_dict = work_with_nstr(data_str_main, data_init)  # соединение воедино всех данных
     print(data_list_dict)
 
-    if "I2C" in protocols:
+    porotocols_names = quant_prot(protocols)
+    if "I2C" in porotocols_names:
         i2c_list_dict = f_pow_gen_secondpart.device_main(hal_msp_work_file, "I2C")
-        print(i2c_list_dict)
         data_list_dict = data_list_dict + i2c_list_dict
 
-    if "UART" in protocols:
+    if "UART" in porotocols_names:
         uart_list_dict = f_pow_gen_secondpart.device_main(hal_msp_work_file, "UART")
         data_list_dict = data_list_dict + uart_list_dict
 
-    if "SPI" in protocols:
+    if "SPI" in porotocols_names:
         spi_list_dict = f_pow_gen_secondpart.device_main(hal_msp_work_file, "SPI")
         data_list_dict = data_list_dict + spi_list_dict
 
-    # print(data_list_dict)
+    print(data_list_dict)
     generation_powerbut_pins(data_list_dict)  # генерирование по шаблону gpio_pin
     return None
 
