@@ -5,6 +5,67 @@ import jinja2
 import binascii
 
 
+def protocol_checker(filename):
+    """
+    Проверка наличия протоколов Pin, I2C, SPI, UART
+    :param node: clang.cindex.node
+    :param filename: str
+    :return: list
+    """
+    index = clang.cindex.Index.create()
+    tu = index.parse(filename)
+    node = tu.cursor
+
+    protocol_check_list = []
+
+    for c in node.get_children():
+        if c.location.file.name == filename:
+            if c.spelling == "main":
+                for i in c.get_children():
+                    for k in i.get_children():
+                        if k.spelling and k.spelling != "HAL_Init" and k.spelling != "SystemClock_Config":
+                            protocol_check_list.append(k.spelling)
+
+    return protocol_check_list
+
+
+def take_need_protocols(protocols):
+    """
+    Выбор протоколов UART, I2C, если имеются
+    :param protocols: list
+    :return: list (ex: [I2C1, UART1, I2C2, UART2])
+    """
+    need_protocols = []
+    for elem in protocols:
+        if "I2C" in elem:
+            need_protocols.append(elem[3:-5])
+        elif "UART" in elem:
+            need_protocols.append(elem[10:-5]+elem[8])
+
+    return need_protocols
+
+
+def quant_prot(protocols):
+    """
+    Разделение на отдельные списки протоколов
+    :param protocols: list
+    :return: list (names protocols)
+    """
+    quant_prot = []
+
+    for elem in protocols:
+        if "GPIO" in elem and not "GPIO" in quant_prot:
+            quant_prot.append("Pin")
+        elif "I2C" in elem and not "I2C" in quant_prot:
+            quant_prot.append("I2C")
+        elif "SPI" in elem and not "SPI" in quant_prot:
+            quant_prot.append("SPI")
+        elif "UART" in elem and not "UART" in quant_prot:
+            quant_prot.append("UART")
+
+    return quant_prot
+
+
 def parser(filename):
     """
     Парсит номерa строк в файле с требуемыми функциями
@@ -53,6 +114,7 @@ def parser_hal_msp(filename):
                             num_str.append(k.location.line)
 
     return num_str
+
 
 def extract_string(filename, num_str):
     """
@@ -172,6 +234,25 @@ def spi_devices(l_d):
     return spi_devices_list
 
 
+def dict_for_myfactory_perips(all_dev, quant_prot):
+    dict_on_protocols = dict()
+    for elem in quant_prot:
+        dict_on_protocols[elem] = []
+
+
+    for elem in all_dev[0]["DEVICES"]:
+        if "SPI" in elem:
+            dict_on_protocols["SPI"].append(elem)
+        elif "I2C" in elem:
+            dict_on_protocols["I2C"].append(elem)
+        elif "UART" in elem:
+            dict_on_protocols["UART"].append(elem)
+        else:
+            dict_on_protocols["Pin"].append(elem)
+
+    return dict_on_protocols
+
+
 def generation_powerbut_pins(data):
     """
     Генерирует по шаблону powerbut_pins
@@ -229,6 +310,20 @@ def generation_spi_chipselect(text_template, data):
     return None
 
 
+def generation_myfactory_periph(data):
+    text_template = "./templates/myfactory_peripherals.h"
+    text = open(text_template).read()
+    template = jinja2.Template(text)
+    model = {"PERIPS": data}
+    temp = template.render(model)
+
+    f = open("./stm32_project/my_factory_peripherals.h", "w")
+    f.writelines(temp)
+    f.close()
+
+    return None
+
+
 if __name__ == "__main__":
 
     # work_file = "D:\python\cubemx\Core\Src\main.c"
@@ -254,15 +349,30 @@ if __name__ == "__main__":
 
     generation_spi_chipselect(text_template_spi_chipselect, l_s_d)  # функция, генерирующая файл по шаблону для spi_chipselect
 
-    number_str = parser_hal_msp(hal_msp_work_file)  # парсим номера нужных строк в файле hal_msp.c
+    # number_str = parser_hal_msp(hal_msp_work_file)  # парсим номера нужных строк в файле hal_msp.c
+    #
+    # data_str = extract_string(hal_msp_work_file, number_str)  # извлечение нужных строк из заданного файла hal_msp.c
+    # # print(data_str)
+    #
+    # ustr_msp = work_with_nstr_msp(data_str)  # какие устройства входят в hal_msp.c
+    # # print(ustr_msp)
+    #
+    # all_dev = data_unification(l_d, ustr_msp)
+    # # print(all_dev)
 
-    data_str = extract_string(hal_msp_work_file, number_str)  # извлечение нужных строк из заданного файла hal_msp.c
-    # print(data_str)
+    protocols = protocol_checker(mainc_work_file)  # получение названия всех протоколов
+    #print(protocols)
+    need_protocols = take_need_protocols(protocols)  # выделение UART-ов и I2C-протоколов
+    #print(need_protocols)
+    all_dev = data_unification(l_d, need_protocols)  # объединение с SPI и powerbutt протоколов UART, I2C
+    print(all_dev)
 
-    ustr_msp = work_with_nstr_msp(data_str)  # какие устройства входят в hal_msp.c
-    # print(ustr_msp)
+    generation_spi_chipselect(text_template_id_periherial, all_dev)  # генерация IdPeriherial.h
 
-    all_dev = data_unification(l_d, ustr_msp)
-    # print(all_dev)
+    quant_protocols = quant_prot(protocols)
+    print(quant_protocols)
 
-    generation_spi_chipselect(text_template_id_periherial, all_dev)
+    dict_for_myfact = dict_for_myfactory_perips(all_dev, quant_protocols)
+    print(dict_for_myfact)
+
+    generation_myfactory_periph(dict_for_myfact)
