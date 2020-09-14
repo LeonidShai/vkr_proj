@@ -242,6 +242,7 @@ def gen_spidevs(filename, all_data):
     template = jinja2.Template(text)
 
     f = open("./stm_project/spi_devs.h", "w")
+    f.write("#include "'"ISPIPin.h"')
     for i in all_data:
         model = i
         temp = template.render(model)

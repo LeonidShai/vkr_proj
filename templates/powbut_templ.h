@@ -1,6 +1,6 @@
 // шаблон для PowerBut_1, PowerBut_2, ..., PowerBut_n
 
-#include "IPin.h"
+// #include "IPin.h"
 
 class STM32{{PINNAME}} : IPin {
 	
@@ -47,7 +47,7 @@ public:
     }
 
     PeriherialID getPeriherialID() const noexcept override {
-        return {{IDKEY}}; //STM32PowerButton
+        return {{IDKEY}}U; //STM32PowerButton
     };
     
     const char* getName() const noexcept override {

@@ -1,6 +1,6 @@
 // шаблон для периферии SPI
 
-#include "ISPIPin.h"
+// #include "ISPIPin.h"
 
 class STM32{{SPINAME}} : public ISpi {
 
@@ -107,7 +107,7 @@ public:
     }
 
     PeriherialID getPeriherialID() const noexcept override {
-        return {{CRCID}}; //STM32SPI1
+        return {{CRCID}}U; //STM32SPI1
     };
     
     const char* getName() const noexcept override {

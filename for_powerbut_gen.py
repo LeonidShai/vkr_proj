@@ -205,6 +205,7 @@ def generation_powerbut_pins(data):
 
     # генерация файла с классами для всех powerbuttons_pins
     f = open("./stm_project/gpio_pins.h", "w")
+    f.write("#include "'"IPin.h"')
     for i in range(len(data)):
         for key in data[i].keys():
             model = data[i][key]

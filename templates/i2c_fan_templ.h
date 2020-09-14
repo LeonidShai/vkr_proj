@@ -1,6 +1,6 @@
 // шаблон для периферии i2C_fan
 
-#include "I_I2C.h"
+// #include "I_I2C.h"
 
 class STM32{{NAME}} : public II2c {
 	
@@ -74,7 +74,7 @@ public:
     }
 
     PeriherialID getPeriherialID() const noexcept override {
-        return {{CRCID}}; //STM32FAN
+        return {{CRCID}}U; //STM32FAN
     };
     
     const char* getName() const noexcept override {

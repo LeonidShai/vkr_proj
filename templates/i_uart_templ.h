@@ -14,11 +14,11 @@ public:
 	//virtual Status write(массив данных передаваемый, размер массива данных, время передачи) noexcept = 0;
 
     PeriherialType getPeriherialType() const noexcept override {
-        return 0x6c663df3;  // crc32 здесь будет переменная 
+        return 0x6c663df3U;  // crc32 здесь будет переменная 
     }
  
     bool isPeriherialTypeParent(PeriherialType periherialType) const noexcept override {  // является ли IPIN родителем PowerButton, или др периферии
-        if (0x6c663df3 == periherialType) {
+        if (0x6c663df3U == periherialType) {
             return true;
         }
         return false;
@@ -26,6 +26,6 @@ public:
     
     virtual const char* getPortName() const noexcept = 0;  // метод для установки имени порта, на который подключается периферия
 	
-	const PeriherialType Type = 0x6c663df3;
+	const PeriherialType Type = 0x6c663df3U;
 	
 };

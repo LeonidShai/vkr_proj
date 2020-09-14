@@ -1,6 +1,6 @@
 // шаблон для периферии iuart_device
 
-#include "I_UART.h"
+// #include "I_UART.h"
 
 class STM32{{NAME}} : public IUart {
 	
@@ -60,7 +60,7 @@ public:
     }
 
     PeriherialID getPeriherialID() const noexcept override {
-        return {{CRCID}}; //STM32UARTDEVICE
+        return {{CRCID}}U; //STM32UARTDEVICE
     };
     
     const char* getName() const noexcept override {
