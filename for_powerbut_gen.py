@@ -2,7 +2,9 @@ import clang.cindex
 import binascii
 import jinja2
 
-import f_pow_gen_secondpart
+import f_pow_gen_secondpart  # для powerbuttons
+import spi_dev_gen  # для генерации spi_devs
+import i2c_gen  # для генерации i2c_devs и uart_devs
 
 
 def quant_prot(protocols):
@@ -124,7 +126,7 @@ def extract_initstruct(filename, num_str):
     return data_str_list
 
 
-def work_with_nstr(data_str, data_init):
+def work_with_nstr(data_str, data_init, file_inc):
     """
     Получение словаря из строки: {"portname": None, "pinport": None, "funcname": None}
     :param data_str: list (strings)
@@ -156,7 +158,7 @@ def work_with_nstr(data_str, data_init):
             data_dict[a[1][j]]["PORTNAME"] = a[0]
             data_dict[a[1][j]]["PINNAME"] = a[1][j]
             data_dict[a[1][j]]["IDKEY"] = hex(binascii.crc32(str.encode("STM32"+a[1][j])))
-            data_dict[a[1][j]]["PIN"] = "P" + a[0][-1::] + pin_find(a[1][j])
+            data_dict[a[1][j]]["PIN"] = "P" + a[0][-1] + pin_find(a[1][j], file_inc)
             data_dict[a[1][j]]["INITS"] = data_init[schet]["INITS"]
             data_list_dict.append(data_dict)
 
@@ -167,14 +169,16 @@ def work_with_nstr(data_str, data_init):
     return data_list_dict
 
 
-def pin_find(pin_name):
+def pin_find(pin_name, file_name):
     """
     Парсинг номера пина, к кот. подключено устройство
     :param pin_name: str
     :param file: str (уже открытый файл)
     :return: str
     """
-    file = open("D:\python\cubemx\pbpin_spi_i2c\Core\Inc\main.h", "r")
+    # file = open("D:\python\cubemx\pbpin_spi_i2c\Core\Inc\main.h", "r")
+    # file = open("D:\python\my_pin\Core\Inc\main.h")
+    file = open(file_name)
     gpio_pin = str()
     for line in file:
         if pin_name in line:
@@ -200,7 +204,7 @@ def generation_powerbut_pins(data):
     template = jinja2.Template(text)
 
     # генерация файла с классами для всех powerbuttons_pins
-    f = open("./stm32_project/gpio_pins.h", "w")
+    f = open("./stm_project/gpio_pins.h", "w")
     for i in range(len(data)):
         for key in data[i].keys():
             model = data[i][key]
@@ -212,14 +216,16 @@ def generation_powerbut_pins(data):
     return None
 
 
-def maybe_main_gpiogen():
+def maybe_main_gpiogen(main_work_file, hal_msp_work_file, incmain_file):
     """
     Основная функция
     :return: None
     """
-    main_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\main.c"
-    hal_msp_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\stm32f1xx_hal_msp.c"
-    template_gpiopin = "./templates/powbut_templ.h"
+    # main_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\main.c"
+    # main_work_file = "D:\python\my_pin\Core\Src\main.c"
+    # hal_msp_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\stm32f1xx_hal_msp.c"
+    # hal_msp_work_file = "D:\python\my_pin\Core\Src\stm32f1xx_hal_msp.c"
+    # template_gpiopin = "./templates/powbut_templ.h"
 
     protocols = protocol_checker(main_work_file)  # все имеющиеся протоколы
     print(protocols)
@@ -232,21 +238,24 @@ def maybe_main_gpiogen():
     data_init = extract_initstruct(main_work_file, num_init)  # строки Init
     # print(data_init)
 
-    data_list_dict = work_with_nstr(data_str_main, data_init)  # соединение воедино всех данных
+    data_list_dict = work_with_nstr(data_str_main, data_init, incmain_file)  # соединение воедино всех данных
     print(data_list_dict)
 
     porotocols_names = quant_prot(protocols)
     if "I2C" in porotocols_names:
         i2c_list_dict = f_pow_gen_secondpart.device_main(hal_msp_work_file, "I2C")
         data_list_dict = data_list_dict + i2c_list_dict
+        i2c_gen.maybe_i2c_uart(main_work_file, hal_msp_work_file, "I2C")
 
     if "UART" in porotocols_names:
         uart_list_dict = f_pow_gen_secondpart.device_main(hal_msp_work_file, "UART")
         data_list_dict = data_list_dict + uart_list_dict
+        i2c_gen.maybe_i2c_uart(main_work_file, hal_msp_work_file, "UART")
 
     if "SPI" in porotocols_names:
         spi_list_dict = f_pow_gen_secondpart.device_main(hal_msp_work_file, "SPI")
         data_list_dict = data_list_dict + spi_list_dict
+        spi_dev_gen.maybe_main_func(main_work_file, hal_msp_work_file)
 
     print(data_list_dict)
     generation_powerbut_pins(data_list_dict)  # генерирование по шаблону gpio_pin
@@ -254,4 +263,7 @@ def maybe_main_gpiogen():
 
 
 if __name__ == "__main__":
-    maybe_main_gpiogen()
+    main_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\main.c"
+    hal_msp_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\stm32f1xx_hal_msp.c"
+    file_inc = "D:\python\cubemx\pbpin_spi_i2c\Core\Inc\main.h"
+    maybe_main_gpiogen(main_work_file, hal_msp_work_file, file_inc)

@@ -35,22 +35,22 @@ def create_skeleton(protocol_check_list):
     :param protocol_check_list: list
     :return: None
     """
-    if not os.path.isdir("stm32_project"):
-        os.mkdir("stm32_project")
-        shutil.copyfile("./templates/periherial_templ.h", "./stm32_project/periherial.h")
+    if not os.path.isdir("stm_project"):
+        os.mkdir("stm_project")
+        shutil.copyfile("./templates/periherial_templ.h", "./stm_project/periherial.h")
 
     for name in protocol_check_list:
         if name == "GPIO":
-            shutil.copyfile("./templates/ipin_templ.h", "./stm32_project/i_pin.h")
+            shutil.copyfile("./templates/ipin_templ.h", "./stm_project/i_pin.h")
 
         elif "I2C" in name:
-            shutil.copyfile("./templates/i_i2c_templ.h", "./stm32_project/i_i2c.h")
+            shutil.copyfile("./templates/i_i2c_templ.h", "./stm_project/i_i2c.h")
 
         elif "SPI" in name:
-            shutil.copyfile("./templates/ispi_templ.h", "./stm32_project/i_spi.h")
+            shutil.copyfile("./templates/ispi_templ.h", "./stm_project/i_spi.h")
 
         elif "USART" in name:
-            shutil.copyfile("./templates/i_uart_templ.h", "./stm32_project/i_uart.h")
+            shutil.copyfile("./templates/i_uart_templ.h", "./stm_project/i_uart.h")
 
         else:
             ...  # это просто окончание
@@ -82,20 +82,23 @@ def generate_periherial_factory(protocol_list):
     model = {"PERIPS": main_protocol_list}
     temp = template.render(model)
 
-    f = open("./stm32_project/periherial_factory.h", "w")
+    # f = open("./stm32_project/periherial_factory.h", "w")
+    f = open("./stm_project/periherial_factory.h", "w")
     f.writelines(temp)
     f.close()
 
     return None
 
 
-def maybe_main_myfactory():
+def maybe_main_myfactory(main_work_file):
     """
     Как бы основная функция
     :return: None
     """
-    main_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\main.c"
-    halmsp_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\stm32f1xx_hal_msp.c"
+    # main_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\main.c"
+    # main_work_file = "D:\python\my_pin\Core\Src\main.c"
+    # halmsp_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\stm32f1xx_hal_msp.c"
+    # halmsp_work_file = "D:\python\my_pin\Core\Src\stm32f1xx_hal_msp.c"
 
     protocols = protocol_checker(main_work_file)  # какие протоколы использованы
     # print(protocols)
@@ -107,4 +110,7 @@ def maybe_main_myfactory():
 
 if __name__ == "__main__":
 
-    maybe_main_myfactory()
+    main_work_file = "D:\python\my_pin\Core\Src\main.c"
+    halmsp_work_file = "D:\python\my_pin\Core\Src\stm32f1xx_hal_msp.c"
+    # our_path = "D:\python\my_pin"
+    maybe_main_myfactory(main_work_file)

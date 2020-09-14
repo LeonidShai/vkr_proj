@@ -183,7 +183,7 @@ def generation_i2c_dev(data, quant_i2c, who):
     template = jinja2.Template(text)
 
     # генерация файла с классами для всех powerbuttons_pins
-    f = open("./stm32_project/"+who+"_devs.h", "w")
+    f = open("./stm_project/"+who.lower()+"_devs.h", "w")
     for e in range(len(quant_i2c)):
         model = data[e][quant_i2c[e]]
         temp = template.render(model)
@@ -193,15 +193,11 @@ def generation_i2c_dev(data, quant_i2c, who):
     return None
 
 
-if __name__ == "__main__":
-    first_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\main.c"
-    second_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\stm32f1xx_hal_msp.c"
-    who = "I2C"
-
+def maybe_i2c_uart(first_work_file, second_work_file, who):
     quant_i2c = parser_quant_i2c(first_work_file, who)
     print(quant_i2c)
     print()
-    
+
     num_str = parser_main(first_work_file, quant_i2c)
     print(num_str)
     print()
@@ -226,3 +222,11 @@ if __name__ == "__main__":
     print(data)
 
     generation_i2c_dev(data, quant_i2c, who)
+    return None
+
+
+if __name__ == "__main__":
+    first_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\main.c"
+    second_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\stm32f1xx_hal_msp.c"
+    who = "UART"  # UART, I2C
+    maybe_i2c_uart(first_work_file, second_work_file, who)

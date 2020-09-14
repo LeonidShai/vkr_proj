@@ -241,7 +241,7 @@ def gen_spidevs(filename, all_data):
     text = open(text_template).read()
     template = jinja2.Template(text)
 
-    f = open("./stm32_project/spi_devs.h", "w")
+    f = open("./stm_project/spi_devs.h", "w")
     for i in all_data:
         model = i
         temp = template.render(model)
@@ -250,9 +250,8 @@ def gen_spidevs(filename, all_data):
 
     return None
 
-def maybe_main_func():
-    first_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\main.c"
-    second_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\stm32f1xx_hal_msp.c"
+
+def maybe_main_func(first_work_file, second_work_file):
     template_spidev = "./templates/spi_ble_templ.h"
 
     protocols = protocol_checker(first_work_file)
@@ -282,6 +281,7 @@ def maybe_main_func():
 
 
 if __name__ == "__main__":
-
-    maybe_main_func()
+    first_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\main.c"
+    second_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\stm32f1xx_hal_msp.c"
+    maybe_main_func(first_work_file, second_work_file)
 

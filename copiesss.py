@@ -136,7 +136,7 @@ def extract_string(filename, num_str):
     return data_str
 
 
-def work_with_nstr(data_str):
+def work_with_nstr(data_str, filename):
     """
     Получение словаря из строки: {"portname": None, "pinport": None, "funcname": None}
     :param data_str: list (strings)
@@ -145,7 +145,7 @@ def work_with_nstr(data_str):
 
     data_list_dict = []  # список для словарей с требуемыми параметрами
     # получение из каждой строки подстроки в скобках
-    file = open("D:\python\cubemx\pbpin_spi_i2c\Core\Inc\main.h", "r")
+    file = open(filename, "r")
     for stroka in data_str:
         s = int()
         e = int()
@@ -299,11 +299,11 @@ def generation_spi_chipselect(text_template, data):
     temp = template.render(model)
 
     if "chipselect" in text_template:
-        f = open("./stm32_project/spi_chipselect.h", "w")
+        f = open("./stm_project/spi_chipselect.h", "w")
         f.writelines(temp)
         f.close()
     else:
-        f = open("./stm32_project/id_periherial.h", "w")
+        f = open("./stm_project/id_periherial.h", "w")
         f.writelines(temp)
         f.close()
 
@@ -317,37 +317,61 @@ def generation_myfactory_periph(data):
     model = {"PERIPS": data}
     temp = template.render(model)
 
-    f = open("./stm32_project/my_factory_peripherals.h", "w")
+    f = open("./stm_project/my_factory_peripherals.h", "w")
     f.writelines(temp)
     f.close()
 
     return None
 
 
-if __name__ == "__main__":
-
-    # work_file = "D:\python\cubemx\Core\Src\main.c"
-    # work_file = "D:\python\cubemx/all_powerbuttons\Core\Src\main.c"
-    # work_file = "D:\python\cubemx/three_powerbuttons\Core\Src\main.c"
-    mainc_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\main.c"
-    hal_msp_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\stm32f1xx_hal_msp.c"
+def maybe_main(mainc_work_file, inc_main_file):
     text_template_spi_chipselect = "./templates/spi_chipselect_templ.h"
     text_template_id_periherial = "./templates/Periherial_id_templ.h"
 
     number_str = parser(mainc_work_file)  # парсим номера нужных строк в файле main.c
 
+    protocols = protocol_checker(mainc_work_file)  # получение названия всех протоколов
+    # print(protocols)
+    quant_protocols = quant_prot(protocols)
+    print(quant_protocols)
+
     data_str = extract_string(mainc_work_file, number_str)  # извлечение нужных строк из заданного файла main.c
     # print(data_str)
 
-    l_d = work_with_nstr(data_str)  # работа со строками, получение списка словарей с данными
+    l_d = work_with_nstr(data_str, inc_main_file)  # работа со строками, получение списка словарей с данными
     # print(l_d)
 
-    generation_powerbut_pins(l_d)  # функция, генерирующая файл по шаблону для powerbutton_pins
+    if "SPI" in quant_protocols:
+        l_s_d = spi_devices(l_d)  # какие устройства входят в spi
+        # print(l_s_d)
+        generation_spi_chipselect(text_template_spi_chipselect, l_s_d)  # функция, генерирующая файл по шаблону для spi_chipselect
 
-    l_s_d = spi_devices(l_d)  # какие устройства входят в spi
-    # print(l_s_d)
+    need_protocols = take_need_protocols(protocols)  # выделение UART-ов и I2C-протоколов
+    # print(need_protocols)
+    all_dev = data_unification(l_d, need_protocols)  # объединение с SPI и powerbutt протоколов UART, I2C
+    print(all_dev)
 
-    generation_spi_chipselect(text_template_spi_chipselect, l_s_d)  # функция, генерирующая файл по шаблону для spi_chipselect
+    generation_spi_chipselect(text_template_id_periherial, all_dev)  # генерация IdPeriherial.h
+
+    dict_for_myfact = dict_for_myfactory_perips(all_dev, quant_protocols)
+    print(dict_for_myfact)
+
+    generation_myfactory_periph(dict_for_myfact)
+
+    return None
+
+
+if __name__ == "__main__":
+
+    # mainc_work_file = "D:\python\my_pin\Core\Src\main.c"
+    mainc_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\main.c"
+    # hal_msp_work_file = "D:\python\my_pin\Core\Src\stm32f1xx_hal_msp.c"
+    hal_msp_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\stm32f1xx_hal_msp.c"
+    inc_main_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Inc\main.h"
+
+    maybe_main(mainc_work_file, inc_main_file)
+
+    # generation_powerbut_pins(l_d)  # функция, генерирующая файл по шаблону для powerbutton_pins
 
     # number_str = parser_hal_msp(hal_msp_work_file)  # парсим номера нужных строк в файле hal_msp.c
     #
@@ -359,20 +383,3 @@ if __name__ == "__main__":
     #
     # all_dev = data_unification(l_d, ustr_msp)
     # # print(all_dev)
-
-    protocols = protocol_checker(mainc_work_file)  # получение названия всех протоколов
-    #print(protocols)
-    need_protocols = take_need_protocols(protocols)  # выделение UART-ов и I2C-протоколов
-    #print(need_protocols)
-    all_dev = data_unification(l_d, need_protocols)  # объединение с SPI и powerbutt протоколов UART, I2C
-    print(all_dev)
-
-    generation_spi_chipselect(text_template_id_periherial, all_dev)  # генерация IdPeriherial.h
-
-    quant_protocols = quant_prot(protocols)
-    print(quant_protocols)
-
-    dict_for_myfact = dict_for_myfactory_perips(all_dev, quant_protocols)
-    print(dict_for_myfact)
-
-    generation_myfactory_periph(dict_for_myfact)
