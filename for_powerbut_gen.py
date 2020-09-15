@@ -159,11 +159,13 @@ def work_with_nstr(data_str, data_init, file_inc):
             if len(a[0]) > 5:
                 port = port_finder(a[0], file_inc)
                 data_dict[a[1][j]]["CLCEN"] = port
+                data_dict[a[1][j]]["PIN"] = "P" + port[-1] + pin_find(a[1][j], file_inc)
             else:
                 data_dict[a[1][j]]["CLCEN"] = a[0]
+                data_dict[a[1][j]]["PIN"] = "P" + a[0][-1] + pin_find(a[1][j], file_inc)
+
             data_dict[a[1][j]]["PINNAME"] = a[1][j]
             data_dict[a[1][j]]["IDKEY"] = hex(binascii.crc32(str.encode("STM32"+a[1][j])))
-            data_dict[a[1][j]]["PIN"] = "P" + a[0][-1] + pin_find(a[1][j], file_inc)
             data_dict[a[1][j]]["INITS"] = data_init[schet]["INITS"]
             data_list_dict.append(data_dict)
 
