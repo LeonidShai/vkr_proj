@@ -15,7 +15,7 @@ public:
 	
 	  GPIO_InitTypeDef GPIO_InitStruct = {0};
 	  
-	  __HAL_RCC_{{PORTNAME}}_CLK_ENABLE();
+	  __HAL_RCC_{{CLCEN}}_CLK_ENABLE();
 	  
 	  GPIO_InitStruct.Pin = {{PINNAME}}_Pin;
 	  {% for INIT in INITS %}{{INIT}}

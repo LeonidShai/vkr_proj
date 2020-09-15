@@ -135,9 +135,10 @@ def work_with_deinit_str(deinit_str):
         a[1] = a[1].split("|")
 
         for j in range(len(a[1])):
-            data_dict = {a[1][j]: {"PORTNAME": None, "PINNAME": None, "IDKEY": None,
+            data_dict = {a[1][j]: {"PORTNAME": None, "CLCEN": None, "PINNAME": None, "IDKEY": None,
                                    "PIN": None, "INITS": None}}
             data_dict[a[1][j]]["PORTNAME"] = a[0]
+            data_dict[a[1][j]]["CLCEN"] = a[0]
             data_dict[a[1][j]]["PINNAME"] = a[1][j]
             data_dict[a[1][j]]["IDKEY"] = hex(binascii.crc32(str.encode("STM32"+a[1][j])))
             data_deinit.append(data_dict)
@@ -212,7 +213,7 @@ def quant_test(filename, numstrs):
 def device_main(hal_msp_work_file, param):
     """
     Как бы основная функция
-    :param hal_msp_work_file: str (fiename)
+    :param hal_msp_work_file: str (filename)
     :return: list список словарей с основными параметрами для каждого пина
     """
     numstr_deinit = parser_deinit(hal_msp_work_file, param)  # парсим номера строк HAL_GPIO_DeInit

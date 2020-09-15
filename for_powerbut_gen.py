@@ -153,9 +153,14 @@ def work_with_nstr(data_str, data_init, file_inc):
 
         # создание словаря с нужными параметрами и добаление в список (59)
         for j in range(len(a[1])):
-            data_dict = {a[1][j]: {"PORTNAME": None, "PINNAME": None, "IDKEY": None,
+            data_dict = {a[1][j]: {"PORTNAME": None, "CLCEN": None, "PINNAME": None, "IDKEY": None,
                                    "PIN": None, "INITS": None}}
             data_dict[a[1][j]]["PORTNAME"] = a[0]
+            if len(a[0]) > 5:
+                port = port_finder(a[0], file_inc)
+                data_dict[a[1][j]]["CLCEN"] = port
+            else:
+                data_dict[a[1][j]]["CLCEN"] = a[0]
             data_dict[a[1][j]]["PINNAME"] = a[1][j]
             data_dict[a[1][j]]["IDKEY"] = hex(binascii.crc32(str.encode("STM32"+a[1][j])))
             data_dict[a[1][j]]["PIN"] = "P" + a[0][-1] + pin_find(a[1][j], file_inc)
@@ -167,6 +172,24 @@ def work_with_nstr(data_str, data_init, file_inc):
     # file.close()
 
     return data_list_dict
+
+
+def port_finder(name_port, file_name):
+    """
+    Функция для поиска правильного названия порта: GPIOx, where x - A, B or C
+    :param name_port: str (if portname != GPIOx, where x - A, B or C)
+    :param file_name: str (filename of main.h)
+    :return: str (port: GPIOx, where x - A, B or C)
+    """
+    file = open(file_name)
+    lines_list = []
+    for line in file:
+        if name_port in line:
+            line = line[8:]
+            lines_list = line.split()
+
+    port = lines_list[1]
+    return port
 
 
 def pin_find(pin_name, file_name):
