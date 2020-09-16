@@ -1,0 +1,1 @@
+MyCarPeripherals::getInstance().init();
