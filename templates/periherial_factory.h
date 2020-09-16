@@ -1,4 +1,4 @@
-#include "IPeriherial.h"
+#include "periherial.h"
 
 class Peripherals {
     

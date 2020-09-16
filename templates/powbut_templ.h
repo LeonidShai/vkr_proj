@@ -1,6 +1,4 @@
-// шаблон для PowerBut_1, PowerBut_2, ..., PowerBut_n
 
-// #include "IPin.h"
 
 class STM32{{PINNAME}} : IPin {
 	
@@ -10,14 +8,13 @@ private:
 
 public:
 
-    Status init() noexcept override {
-      // Нужно скопировать всё, что CubeMX сгенирировал в init блоке в начале функции main  
+    Status init() noexcept override {  
 	
 	  GPIO_InitTypeDef GPIO_InitStruct = {0};
 	  
 	  __HAL_RCC_{{CLCEN}}_CLK_ENABLE();
 	  
-	  GPIO_InitStruct.Pin = {{PINNAME}}_Pin;
+	  GPIO_InitStruct.Pin = {{PINNAME}};
 	  {% for INIT in INITS %}{{INIT}}
 	  {% endfor %}HAL_GPIO_Init({{PORTNAME}}, &GPIO_InitStruct);
       
@@ -47,7 +44,7 @@ public:
     }
 
     PeriherialID getPeriherialID() const noexcept override {
-        return {{IDKEY}}U; //STM32PowerButton
+        return {{IDKEY}}U;
     };
     
     const char* getName() const noexcept override {

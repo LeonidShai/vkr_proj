@@ -1,36 +1,19 @@
-// шаблон для периферии SPI
 
-// #include "ISPIPin.h"
 
 class STM32{{SPINAME}} : public ISpi {
 
 	{% for PINNAME in PINNAMES %}stm32spi {{PINNAME}};
 	{% endfor %}
-	SPI_HandleTypeDef {{SPINUM}};  // hspi1, hspi2
+	SPI_HandleTypeDef {{SPINUM}};
 
 public:
 	Status init() noexcept override {
 		
-		{% for PINNAME in PINNAMES %}{{PINNAME}}.init();  // SPI1_SCK, SPI1_MISO, SPI1_MOSI, BLE, MEM
+		{% for PINNAME in PINNAMES %}{{PINNAME}}.init();
 		{% endfor %}
 		
 		{% for INIT in INITS %}{{INIT}}
 		{% endfor %}
-		
-		/*
-		hspi1.Instance = SPI1;
-		hspi1.Init.Mode = SPI_MODE_MASTER;
-		hspi1.Init.Direction = SPI_DIRECTION_2LINES;
-		hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
-		hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
-		hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
-		hspi1.Init.NSS = SPI_NSS_SOFT;
-		hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
-		hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
-		hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
-		hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-		hspi1.Init.CRCPolynomial = 10;
-		*/
 		
 		if (HAL_SPI_Init(&{{SPINUM}}) != HAL_OK)
 			{
@@ -64,11 +47,10 @@ public:
 					m{{SPINUM}}CS{{SPIDEVS[I]}}.write(true);
 					
 					if (halStatus != HAL_OK) {
-						// Все негативные ситуации
 						return Status::Error;
 					}
 			{% else %}
-				}else if (chipSelect == SPIChipSelect::{{SPIDEVS[I]}}) {  // BLE
+				}else if (chipSelect == SPIChipSelect::{{SPIDEVS[I]}}) {
 					m{{ISPINUM}}CS{{SPIDEVS[I]}}.write(false);
 					
 					auto halStatus = HAL_SPI_Transmit(&{{SPINUM}}, mBufferuf, buffersize, timeout);
@@ -76,7 +58,6 @@ public:
 					m{{SPINUM}}CS{{SPIDEVS[I]}}.write(true);
 					
 					if (halStatus != HAL_OK) {
-						// Все негативные ситуации
 						return Status::Error;
 					}
 			{% endif %}
@@ -89,9 +70,7 @@ public:
 			
     	return Status::SUCCESS;
 		}
-		
-		
-	
+					
 	std::tuple<Status, uint8_t*, size_t> read(size_t dataSize, size_t timeout) {
 		
 		if (dataSize > mBufferSize) {
@@ -107,7 +86,7 @@ public:
     }
 
     PeriherialID getPeriherialID() const noexcept override {
-        return {{CRCID}}U; //STM32SPI1
+        return {{CRCID}}U;
     };
     
     const char* getName() const noexcept override {
@@ -115,7 +94,7 @@ public:
     }
     
     const char* getPortName() const noexcept override {
-        return "{{PIN1}}", "{{PIN2}}", "{{PIN3}}";  // откуда узнаём?
+        return "{{PIN1}}", "{{PIN2}}", "{{PIN3}}";
     }
 
 	bool mInit{false};	

@@ -1,9 +1,8 @@
-#include "IPeriherial.h"
+#include "periherial.h"
 
 class ISpi : public IPeriherial{
 	
 public:
-    //ISPI(uint8_t* buffer, size_t bufferSize) : mBuffer(buffer), mBufferSize(bufferSize){}
     
     virtual std::tuple<Status, uint8_t*, size_t> read(SPIChipSelect chipSelect, size_t dataSize, size_t timeout) noexcept = 0;  // 
        
@@ -21,5 +20,5 @@ public:
         return false;
     }
 	
-	const PeriherialType Type = 0xb2f3f848U; // потом переименовать
+	const PeriherialType Type = 0xb2f3f848U;
 }

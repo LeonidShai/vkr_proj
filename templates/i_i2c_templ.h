@@ -1,6 +1,4 @@
-// шаблон для I_I2С
-
-#include "IPeriherial.h"
+#include "periherial.h"
 
 class II2c : public IPeriherial {
 	
@@ -14,7 +12,7 @@ public:
 	//virtual Status write(идентификатор устройства, адрес устройства, массив данных передаваемый, размер массива данных, время передачи) noexcept = 0;
 
     PeriherialType getPeriherialType() const noexcept override {
-        return 0x81d81a77U;  // crc32 здесь будет переменная 
+        return 0x81d81a77U; 
     }
  
     bool isPeriherialTypeParent(PeriherialType periherialType) const noexcept override {  // является ли IPIN родителем PowerButton, или др периферии

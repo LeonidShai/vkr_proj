@@ -1,6 +1,4 @@
-// шаблон для периферии i2C_fan
 
-// #include "I_I2C.h"
 
 class STM32{{NAME}} : public II2c {
 	
@@ -8,38 +6,26 @@ private:
 
 	{% for PINNAME in PINNAMES %}stm32i2c {{PINNAME}};
 	{% endfor %}
-	// I2C1_Dev_SCL;
-	// I2C1_Dev_SDA;
-	I2C_HandleTypeDef {{I2CNUM}};  // hi2c1
+
+	I2C_HandleTypeDef {{I2CNUM}};
 
 public:
 	Status init() noexcept override {
 		
 		{% for PINNAME in PINNAMES %}{{PINNAME}}.init();
 		{% endfor %}
-		// I2C1_Dev_SCL.init();
-		// I2C1_Dev_SDA.init();
+
 		{% for INIT in INITS %}{{INIT}}
 		{% endfor %}
-		/*
-		hi2c1.Instance = I2C1;
-		hi2c1.Init.ClockSpeed = 100000;
-		hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
-		hi2c1.Init.OwnAddress1 = 0;
-	    hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-	    hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-	    hi2c1.Init.OwnAddress2 = 0;
-	    hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-	    hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-		*/
-		if (HAL_I2C_Init(&{{I2CNUM}}) != HAL_OK)  // не инициализировать
+		
+		if (HAL_I2C_Init(&{{I2CNUM}}) != HAL_OK)
 		{
 			mInit = true;
 			return Status::SUCCESS;
 		}
 	}
 	
-	Status deinit() noexcept override {// так вот будет:
+	Status deinit() noexcept override {
 		if(hi2c->Instance==I2C1){
 			return Status::SUCCESS;
 		}
@@ -47,15 +33,12 @@ public:
 		
 	Status write(const uint16_t* devaddress, const uint8_t* buf, size_t size, size_t timeout) noexcept override {
 	
-	if (!mInit) {
+		if (!mInit) {
             return { Status::InvalidArgument, nullptr, 0U}
         }
-			
-			// Запись из hal 
+ 
 		auto halStatus = HAL_I2C_Master_Transmit(&{{I2CNUM}}, devaddress, mBuffer, buffersize, timeout);
-			//HAL_SPI_Transmit({{mSPIx}}, {{mBufferuf}}, {{buffersize}}, {{timeout}});	// пример:
-			//HAL_SPI_Transmit({{GPIOB}}, {{SPI_BLE}}, {{buffersize}}, {{timeout}});  ннепонятно, где берём buffersize и timeout
-        return Status::SUCCESS; 								//
+		return Status::SUCCESS;
 
 	}
 	
@@ -74,7 +57,7 @@ public:
     }
 
     PeriherialID getPeriherialID() const noexcept override {
-        return {{CRCID}}U; //STM32FAN
+        return {{CRCID}}U;
     };
     
     const char* getName() const noexcept override {

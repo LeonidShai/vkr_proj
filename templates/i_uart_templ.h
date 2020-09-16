@@ -1,6 +1,4 @@
-// шаблон для I_UART
-
-#include "IPeriherial.h"
+#include "periherial.h"
 
 class IUart : public IPeriherial {
 	
@@ -14,7 +12,7 @@ public:
 	//virtual Status write(массив данных передаваемый, размер массива данных, время передачи) noexcept = 0;
 
     PeriherialType getPeriherialType() const noexcept override {
-        return 0x6c663df3U;  // crc32 здесь будет переменная 
+        return 0x6c663df3U; 
     }
  
     bool isPeriherialTypeParent(PeriherialType periherialType) const noexcept override {  // является ли IPIN родителем PowerButton, или др периферии

@@ -1,6 +1,4 @@
-// шаблон для периферии iuart_device
 
-// #include "I_UART.h"
 
 class STM32{{NAME}} : public IUart {
 	
@@ -17,15 +15,7 @@ public:
 		
 		{% for INIT in INITS %}{{INIT}}
 		{% endfor %}
-		
-		//huart1.Instance = USART1;
-		//huart1.Init.BaudRate = 115200;
-		//huart1.Init.WordLength = UART_WORDLENGTH_8B;
-		//huart1.Init.StopBits = UART_STOPBITS_1;
-		//huart1.Init.Parity = UART_PARITY_NONE;
-		//huart1.Init.Mode = UART_MODE_TX_RX;
-		//huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-		//huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+
 		if (HAL_UART_Init(&{{I2CNUM}}) != HAL_OK)
 		{
 			mInit = true;
@@ -38,8 +28,7 @@ public:
 	if (!mInit) {
             return { Status::InvalidArgument, nullptr, 0U}
         }
-			
-			// Запись из hal 
+
 		auto halStatus = HAL_UART_Transmit(&{{I2CNUM}}, mBuffer, bufferSize, timeout);
         return Status::SUCCESS; 							
 
@@ -60,7 +49,7 @@ public:
     }
 
     PeriherialID getPeriherialID() const noexcept override {
-        return {{CRCID}}U; //STM32UARTDEVICE
+        return {{CRCID}}U;
     };
     
     const char* getName() const noexcept override {

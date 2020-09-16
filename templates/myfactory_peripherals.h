@@ -1,14 +1,14 @@
-#include "PeriherialFactory.h"
-#include "STM32PowerButton.h"
+#include "periherial_factory.h"
+#include "i_pin.h"
 
 class MyProjectPeripherals : public Peripherals {
     
 public:
 	{% for PERIP in PERIPS %}
-	I{{PERIP}}* get{{PERIP}}(PeripheralID peripheralID) noexcept override {  // PERIP == Pin, SPI
+	I{{PERIP}}* get{{PERIP}}(PeripheralID peripheralID) noexcept override {
         
         {% for PINNAME in PERIPS[PERIP] %}
-		if (PeripheralID::{{PINNAME}} == peripheralID) {  // PINNAME == PowerButton
+		if (PeripheralID::{{PINNAME}} == peripheralID) {
             if (mSTM32{{PINNAME}}Allocated) {
                 return nullptr;
             }
@@ -93,6 +93,3 @@ private:
 	{% endfor %}{% endfor %}
   
 };
-
-
-// {"PERIPS": {"PIN": [pb1, pb2, pb3], "SPI": [ble, mem, miso, mosi, scl], "I2C": [sda, scl]}} --- get Pin, reset Pin, get SPI, reset SPI

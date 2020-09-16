@@ -1,6 +1,4 @@
-// шаблон для IPIN
-
-#include "IPeriherial.h"
+#include "periherial.h"
 
 class IPin : public IPeriherial {
 
@@ -11,7 +9,7 @@ public:
     virtual Status write(bool state) noexcept = 0;  // запись при инициализации какой-либо периферии GPIO_PIN, SPI, I2C
 
     PeriherialType getPeriherialType() const noexcept override {
-        return 0xb5d17aaaU;  // crc32 здесь будет переменная 
+        return 0xb5d17aaaU; 
     }
  
     bool isPeriherialTypeParent(PeriherialType periherialType) const noexcept override {  // является ли IPIN родителем PowerButton, или др периферии

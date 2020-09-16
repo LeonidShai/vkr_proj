@@ -1,6 +1,5 @@
-// создание переферии GPIO_PIN, SPI, I2C
-#include "PeriherialID.h"
-#include "SPIChipSelectID.h"
+#include "id_periherial.h"
+#include "spi_chipselect.h"
 
 class IPeriherial {
 
