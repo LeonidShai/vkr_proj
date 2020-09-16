@@ -1,3 +1,5 @@
+# парсинг и генерация I2C или UART ппериферии
+
 import clang.cindex
 import binascii
 import jinja2
@@ -5,9 +7,9 @@ import jinja2
 
 def parser_quant_i2c(filename, who):
     """
-    Парсит количество i2c
+    Парсит количество i2c или uart
     :param node: str (filename)
-    :return: list (names I2C)
+    :return: list (names I2C, UART)
     """
     index = clang.cindex.Index.create()
     tu = index.parse(filename)
@@ -56,7 +58,7 @@ def parser_main(filename, quant_i2c):
 
 def parser_hal_msp(filename, quant_i2c, who):
     """
-    Парсит номерa строк начало и конец необходимого фрагмента
+    Парсит номерa строк начало и конец необходимого фрагмента в hal_msp
     :param node: str (filename)
     :return: list (string's numbers)
     """
@@ -136,6 +138,13 @@ def extract_halmsp_string(filename, num_str, quant_i2c):
 
 
 def work_halmsp_data(halmsp_data, quant_i2c, who):
+    """
+    Образование словаря с данными из hal_msp
+    :param halmsp_data:
+    :param quant_i2c: list (["I2C1", "I2C2"])
+    :param who: str ("UART", "I2C")
+    :return: list (список словарей с данными)
+    """
     halmsp_list = []
     for e in range(len(quant_i2c)):
         halmsp_dict = {quant_i2c[e]: {"PIN1": None, "PIN2": None, "PINNAMES": None, "NAME": None, "CRCID": None}}
@@ -163,6 +172,14 @@ def work_halmsp_data(halmsp_data, quant_i2c, who):
 
 
 def unification_data(halmsp_list, data_main, quant_i2c, who):
+    """
+    Объединение данных из hal_msp и main
+    :param halmsp_list: list (данные hal_msp)
+    :param data_main: list (данные main)
+    :param quant_i2c: list (количество i2c или uart)
+    :param who: str (uart или i2c)
+    :return: list (список словарей)
+    """
     for e in range(len(quant_i2c)):
         halmsp_list[e][quant_i2c[e]]["I2CNUM"] = 'h' + who.lower() + data_main[e][quant_i2c[e]][0][-2]
         halmsp_list[e][quant_i2c[e]]["INITS"] = data_main[e][quant_i2c[e]]
@@ -198,34 +215,42 @@ def generation_i2c_dev(data, quant_i2c, who):
 
 
 def maybe_i2c_uart(first_work_file, second_work_file, who):
+    """
+    Основная функция, осуществление парсинга и генерации для I2C и UART периферии
+    :param first_work_file: str (main.c)
+    :param second_work_file: str (main.h)
+    :param who: str ("UART", "I2C")
+    :return: None
+    """
     quant_i2c = parser_quant_i2c(first_work_file, who)
-    print(quant_i2c)
-    print()
+    # парсинг количества I2C или UART в проекте
+    # print(quant_i2c)
 
     num_str = parser_main(first_work_file, quant_i2c)
-    print(num_str)
-    print()
+    # парсинг номеров строк [{'I2C1': [317, 325]}, {'I2C2': [350, 358]}] из main
+    # print(num_str)
 
     data_main = extract_main_string(first_work_file, num_str, quant_i2c)
-    print(data_main)
-    print()
+    # извлечение данных в указанном диапазоне строк для main
+    # print(data_main)
 
     num_str = parser_hal_msp(second_work_file, quant_i2c, who)
-    print(num_str)
-    print()
+    # парсинг номеров строк [{'I2C1': [317, 325]}, {'I2C2': [350, 358]}] из hal_msp
+    # print(num_str)
 
     data_hal_msp = extract_halmsp_string(second_work_file, num_str, quant_i2c)
-    print(data_hal_msp)
-    print()
+    # извлечение данных в указанном диапазоне строк для hal_msp
+    # print(data_hal_msp)
 
     hal_msp_list = work_halmsp_data(data_hal_msp, quant_i2c, who)
-    print(hal_msp_list)
-    print()
+    # получение списка словарей с данными из hal_msp
+    # print(hal_msp_list)
 
     data = unification_data(hal_msp_list, data_main, quant_i2c, who)
-    print(data)
+    # объединение всех данных в один словарь
+    # print(data)
 
-    generation_i2c_dev(data, quant_i2c, who)
+    generation_i2c_dev(data, quant_i2c, who)  # генерация i2c_devs.h или uart_devs.h
     return None
 
 

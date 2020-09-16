@@ -43,6 +43,12 @@ def spi_kind(protocols):
 
 
 def parser_main(filename, spi_list):
+    """
+    Парсинг номеров строк INIT в main.c
+    :param filename: str (имя файла)
+    :param spi_list: list (список SPI)
+    :return: list (список словарей номеров строк: [{'SPI1': [242, 254]}, {'SPI2': [280, 292]}])
+    """
     index = clang.cindex.Index.create()
     tu = index.parse(filename)
     node = tu.cursor
@@ -66,6 +72,11 @@ def parser_main(filename, spi_list):
 
 
 def parser_main_spidev(filename):
+    """
+    Парсер номеров строк HAL_GPIO_WritePin в main
+    :param filename: str (имя файла)
+    :return: list (Номера строк)
+    """
     index = clang.cindex.Index.create()
     tu = index.parse(filename)
     node = tu.cursor
@@ -117,7 +128,7 @@ def parser_hal_msp(filename, spi_list):
 
 def extract_main_string(filename, num_str, spi_list):
     """
-    Извлекает строку/строки из файла
+    Извлекает строку/строки из файла из main
     :param filename: str (filename)
     :param num_str: list (string's numbers)
     :return: list (necessary strings)
@@ -139,6 +150,12 @@ def extract_main_string(filename, num_str, spi_list):
 
 
 def extract_spidevs(filename, numstr_gpio):
+    """
+    Извлечение строк из main HalWritePin
+    :param filename: str (имя файла)
+    :param numstr_gpio: list (номера строк)
+    :return: list (список строк c данными)
+    """
     spidev_list_str = []  # список требуемых строк
     file = open(filename, 'r')
     lines = file.read().splitlines()
@@ -155,7 +172,7 @@ def extract_spidevs(filename, numstr_gpio):
 
 def extract_halmsp_string(filename, num_str, spi_list):
     """
-    Извлекает строку/строки из файла
+    Извлекает строку/строки из файла hal_msp
     :param filename: str (filename)
     :param num_str: list (string's numbers)
     :return: list (necessary strings)
@@ -180,6 +197,12 @@ def extract_halmsp_string(filename, num_str, spi_list):
 
 
 def work_with_spidevs(spidev_list_str, spi_list):
+    """
+    Обработка данных из main HalWritePin
+    :param spidev_list_str: list (список строк)
+    :param spi_list: list (список SPI)
+    :return: list (список словарей [{'SPI1': ['SPI1_MEM', 'SPI1_BLE']}, {'SPI2': ['SPI2_SDcard']}]
+    """
     spidev_list = []
     for spi in spi_list:
         data_spidevs = {spi: []}
@@ -206,6 +229,14 @@ def work_with_spidevs(spidev_list_str, spi_list):
 
 
 def unification_data(inits, spi_devs, pins, spis_list):
+    """
+    Объединение данных  один список
+    :param inits: list (INIT для SPI)
+    :param spi_devs: list (SPI периферия)
+    :param pins: list (пины)
+    :param spis_list:list (протоколы SPI)
+    :return: list (спивок словарей данных для каждого протокола)
+    """
     all_data = []
 
     count = 0
@@ -237,6 +268,12 @@ def unification_data(inits, spi_devs, pins, spis_list):
 
 
 def gen_spidevs(filename, all_data):
+    """
+    Генерация spi_devs.h
+    :param filename: str (имя шблона)
+    :param all_data: list (список данных)
+    :return: None
+    """
     text_template = filename
     text = open(text_template).read()
     template = jinja2.Template(text)
@@ -253,30 +290,37 @@ def gen_spidevs(filename, all_data):
 
 
 def maybe_main_func(first_work_file, second_work_file):
-    template_spidev = "./templates/spi_ble_templ.h"
+    """
+    Основная функция, парсинг и генерация SPI периферии
+    :param first_work_file:
+    :param second_work_file:
+    :return:
+    """
+    template_spidev = "./templates/spi_ble_templ.h"  # шаблон для генерации spi_devs.h
 
-    protocols = protocol_checker(first_work_file)
-    spis_list = spi_kind(protocols)  # получаем только SPI
-    print(spis_list)
-    numstr_main_init = parser_main(first_work_file, spis_list)  # номера строк с init
-    print(numstr_main_init)
-    data_list_init = extract_main_string(first_work_file, numstr_main_init, spis_list)  # init
+    protocols = protocol_checker(first_work_file)  # получение списка протоколов в программе
+    spis_list = spi_kind(protocols)  # получаем только SPI протоколы
+    # print(spis_list)
+    numstr_main_init = parser_main(first_work_file, spis_list)  # номера строк с init из main
+    # print(numstr_main_init)
+    data_list_init = extract_main_string(first_work_file, numstr_main_init, spis_list)  # извлечение init
 
-    numstr_gpio = parser_main_spidev(first_work_file)  # номера строк для устройств
-    spidev_list_str = extract_spidevs(first_work_file, numstr_gpio) # строки с устройствами все HalWritePin
-    print(spidev_list_str)
-    spidev_list = work_with_spidevs(spidev_list_str, spis_list)  # устройтсва spi
-    print(spidev_list)
+    numstr_gpio = parser_main_spidev(first_work_file)  # номера строк для устройств HalWritePin
+    spidev_list_str = extract_spidevs(first_work_file, numstr_gpio)  # извлечение строк HalWritePin
+    # print(spidev_list_str)
+    spidev_list = work_with_spidevs(spidev_list_str, spis_list)
+    # получение словаря с данными для spi
+    # print(spidev_list)
 
-    numstr_pins = parser_hal_msp(second_work_file, spis_list)  # строки из hal_msp
-    print(numstr_pins)
+    numstr_pins = parser_hal_msp(second_work_file, spis_list)  # номера строк из hal_msp
+    # print(numstr_pins)
     pins_str = extract_halmsp_string(second_work_file, numstr_pins, spis_list)  # пины для scl, miso, mosi
-    print(pins_str)
+    # print(pins_str)
 
-    all_data = unification_data(data_list_init, spidev_list, pins_str, spis_list)
-    print(all_data)
+    all_data = unification_data(data_list_init, spidev_list, pins_str, spis_list)  # объединение данных
+    # print(all_data)
 
-    gen_spidevs(template_spidev, all_data)
+    gen_spidevs(template_spidev, all_data)  # генерация spi_devs.h
 
     return None
 

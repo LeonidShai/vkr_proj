@@ -1,4 +1,4 @@
-# генерирование PeriherialId.h
+# генерирование PeriherialId.h и основного скелета программы
 
 import jinja2
 import clang.cindex
@@ -7,10 +7,9 @@ import os, shutil
 
 def protocol_checker(filename):
     """
-    Проверка наличия протоколов Pin, I2C, SPI, UART
-    :param node: clang.cindex.node
-    :param filename: str
-    :return: list
+    Получение протоколов GPIO, I2C, SPI, UART
+    :param filename: str (имя файла)
+    :return: list (список протоколов)
     """
     index = clang.cindex.Index.create()
     tu = index.parse(filename)
@@ -31,8 +30,8 @@ def protocol_checker(filename):
 
 def create_skeleton(protocol_check_list):
     """
-    Копирование нужных файлов из ./templates
-    :param protocol_check_list: list
+    Копирование нужных файлов из ./templates, создание основного скелета
+    :param protocol_check_list: list (список протоколов)
     :return: None
     """
     if not os.path.isdir("stm_project"):
@@ -61,8 +60,8 @@ def create_skeleton(protocol_check_list):
 def generate_periherial_factory(protocol_list):
     """
     генерирование periherial_factory.h
-    :param text_template: str
-    :param protocol_list: list
+    :param text_template: str (имя шаблона)
+    :param protocol_list: list (список протоколов)
     :return: None
     """
     main_protocol_list = []
@@ -92,17 +91,13 @@ def generate_periherial_factory(protocol_list):
 
 def maybe_main_myfactory(main_work_file):
     """
-    Как бы основная функция
+    Основная функция, генерирование основного скелета программы
     :return: None
     """
-    # main_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\main.c"
-    # main_work_file = "D:\python\my_pin\Core\Src\main.c"
-    # halmsp_work_file = "D:\python\cubemx\pbpin_spi_i2c\Core\Src\stm32f1xx_hal_msp.c"
-    # halmsp_work_file = "D:\python\my_pin\Core\Src\stm32f1xx_hal_msp.c"
 
     protocols = protocol_checker(main_work_file)  # какие протоколы использованы
     # print(protocols)
-    create_skeleton(protocols)  # создание основного скелета
+    create_skeleton(protocols)  # создание основного скелета: i_i2c.h, i_pin.h, i_spi.h, i_uart.h
     generate_periherial_factory(protocols)  # генерирование periherial_factory
 
     return None

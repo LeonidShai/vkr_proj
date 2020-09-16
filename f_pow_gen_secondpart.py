@@ -212,7 +212,7 @@ def quant_test(filename, numstrs):
 
 def device_main(hal_msp_work_file, param):
     """
-    Как бы основная функция
+    Основная функция
     :param hal_msp_work_file: str (filename)
     :return: list список словарей с основными параметрами для каждого пина
     """

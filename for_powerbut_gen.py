@@ -1,3 +1,5 @@
+# парсинг и генерирование gpio_pins.h
+
 import clang.cindex
 import binascii
 import jinja2
@@ -254,7 +256,7 @@ def maybe_main_gpiogen(main_work_file, hal_msp_work_file, incmain_file):
     # template_gpiopin = "./templates/powbut_templ.h"
 
     protocols = protocol_checker(main_work_file)  # все имеющиеся протоколы
-    print(protocols)
+    # print(protocols)
 
     num_hal_write, num_init = parser(main_work_file)  # номера строк HalWritePin и начало Init
     # print(num_hal_write, num_init)
@@ -265,7 +267,7 @@ def maybe_main_gpiogen(main_work_file, hal_msp_work_file, incmain_file):
     # print(data_init)
 
     data_list_dict = work_with_nstr(data_str_main, data_init, incmain_file)  # соединение воедино всех данных
-    print(data_list_dict)
+    # print(data_list_dict)
 
     porotocols_names = quant_prot(protocols)
     if "I2C" in porotocols_names:
@@ -283,7 +285,7 @@ def maybe_main_gpiogen(main_work_file, hal_msp_work_file, incmain_file):
         data_list_dict = data_list_dict + spi_list_dict
         spi_dev_gen.maybe_main_func(main_work_file, hal_msp_work_file)
 
-    print(data_list_dict)
+    # print(data_list_dict)
     generation_powerbut_pins(data_list_dict)  # генерирование по шаблону gpio_pin
     return None
 

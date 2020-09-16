@@ -1,3 +1,5 @@
+# основной файл, запускающий работу всего приложения
+
 import os
 
 import periherialid_gen  # для генерации скелета
@@ -8,7 +10,7 @@ import for_powerbut_gen  # для генерации powerbutton's
 def finder_work_files():
     """
     Осуществляет поиск рабочих файлов в сгенерированном проекте CubeMX
-    :return:
+    :return: None
     """
     our_path = os.getcwd()
     src_path = our_path + "/Core/Src"
@@ -30,15 +32,28 @@ def finder_work_files():
         return None
 
 
-if __name__ == "__main__":
+def main():
+    """
+    Основная функци, запуск всего приложения
+    :return: None
+    """
     if not finder_work_files():
         print("Не существует файлов: main.c, main.h, hal_msp.c!")
     else:
-        srcmain_work_file, halmsp_work_file, incmain_work_file = finder_work_files()
-        print(srcmain_work_file, "\n", halmsp_work_file, "\n", incmain_work_file)
+        srcmain_work_file, halmsp_work_file, incmain_work_file = finder_work_files()  # пути к нужным файлам
+        # print(srcmain_work_file, "\n", halmsp_work_file, "\n", incmain_work_file)
 
         periherialid_gen.maybe_main_myfactory(srcmain_work_file)  # основные файлы генерирует, skeleton
 
-        copiesss.maybe_main(srcmain_work_file, incmain_work_file)  # для генерации id_periherial, my_factory, spi_chipselect
+        copiesss.maybe_main(srcmain_work_file, incmain_work_file)
+        # для генерации id_periherial, my_factory, spi_chipselect
 
-        for_powerbut_gen.maybe_main_gpiogen(srcmain_work_file, halmsp_work_file, incmain_work_file)  # для генерации powerbutton's
+        for_powerbut_gen.maybe_main_gpiogen(srcmain_work_file, halmsp_work_file, incmain_work_file)
+        # для генерации powerbutton's
+        print("Программа выполнилась!")
+
+    return None
+
+
+if __name__ == "__main__":
+    main()  # запуск всего приложения

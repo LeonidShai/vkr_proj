@@ -1,4 +1,4 @@
-# function for copy from MX_GPIO_Init data and parse this data
+# парсинг и генерация spi_chipselect, IdPeripheral, MyFactoryPeripheral
 
 import clang.cindex
 import jinja2
@@ -259,7 +259,7 @@ def maybe_main(mainc_work_file, inc_main_file):
     protocols = protocol_checker(mainc_work_file)  # получение названия всех протоколов
     # print(protocols)
     quant_protocols = quant_prot(protocols)  # определение существующих протоколов
-    print(quant_protocols)
+    # print(quant_protocols)
 
     data_str = extract_string(mainc_work_file, number_str)  # извлечение нужных строк из заданного файла main.c
     # print(data_str)
@@ -275,13 +275,13 @@ def maybe_main(mainc_work_file, inc_main_file):
     need_protocols = take_need_protocols(protocols)  # выделение UART-ов и I2C-протоколов
     # print(need_protocols)
     all_dev = data_unification(l_d, need_protocols)  # объединение с SPI и powerbutt протоколов UART, I2C
-    print(all_dev)
+    # print(all_dev)
 
     generation_spi_chipselect(text_template_id_periherial, all_dev)  # генерация IdPeriherial.h
 
     dict_for_myfact = dict_for_myfactory_perips(all_dev, quant_protocols)
     # подготовка данных для шаблона MyFactoryPeripherals
-    print(dict_for_myfact)
+    # print(dict_for_myfact)
 
     generation_myfactory_periph(dict_for_myfact)  # генерация MyFactoryPeripherals
 
