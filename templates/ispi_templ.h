@@ -1,6 +1,10 @@
-#include "periherial.h"
+#ifndef ISPI_H
+#define ISPI_H
 
-class ISpi : public IPeriherial{
+#include "periherial.h"
+#include "spi_chipselect.h"
+
+class ISpi : public IPeripheral{
 	
 public:
     
@@ -9,16 +13,18 @@ public:
     virtual Status write(SPIChipSelect chipSelect, const uint8_t* mBuffer, size_t mBufferSize, size_t timeout) noexcept = 0;
 	//virtual Status write("указатель на шину, к которой подкл периферия", "указатель на данные (массив данных)", "размер массива (или пакета?) с данными", "время передачи нашей информации в массиве (или в пакете?)") 
     
-    PeriherialType getPeriherialType() const noexcept override {  // тут ттоже будет переменная
+    PeripheralType getPeripheralType() const noexcept override {  // тут ттоже будет переменная
         return 0xb2f3f848U;
     }
     
-    bool isPeriherialTypeParent(PeriherialType periherialType) const noexcept override {
-        if (0xb2f3f848U == periherialType) {
+    bool isPeripheralTypeParent(PeripheralType peripheralType) const noexcept override {
+        if (0xb2f3f848U == peripheralType) {
             return true;
         }
         return false;
     }
 	
-	const PeriherialType Type = 0xb2f3f848U;
-}
+	const PeripheralType peripheralType = 0xb2f3f848U;
+};
+
+#endif  // ISPI_H

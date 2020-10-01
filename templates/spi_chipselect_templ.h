@@ -1,16 +1,13 @@
+#ifndef SPICHIPSELECT_H
+#define SPICHIPSELECT_H
 #include <cstdint>
 
 enum class SPIChipSelect : uint8_t {
 	{% for DEVICE in DEVICES %}
-	{{DEVICE}};{% endfor %}
+	{{DEVICE}},{% endfor %}
+	INVALID_ARG
+};
 
-	{% for DEVICE in DEVICES %}
-	SPIChipSelectID getSPIChipSelectIDByString(const char* s) noexcept {
-		if (0 == std::strcmp(s, "{{DEVICE}}")) {
-			return SPIChipSelectID::{{DEVICE}};
-		}
-    
-		return SPIChipSelectID::INVALID_ARG;
-	}
-	{% endfor %}
-}
+SPIChipSelectID getSPIChipSelectIDByString(const char* s) noexcept;
+	
+#endif // SPICHIPSELECT_H

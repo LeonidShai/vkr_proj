@@ -1,4 +1,7 @@
+#ifndef {{SPINAME}}_H
+#define {{SPINAME}}_H
 
+#include "i_spi.h"
 
 class STM32{{SPINAME}} : public ISpi {
 
@@ -98,5 +101,6 @@ public:
     }
 
 	bool mInit{false};	
-}
+};
 
+#endif

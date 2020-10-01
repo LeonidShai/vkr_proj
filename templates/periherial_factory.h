@@ -1,4 +1,8 @@
+#ifndef PERIHERIALS_H
+#define PERIHERIALS_H
+
 #include "periherial.h"
+#include "i_pin.h"
 
 class Peripherals {
     
@@ -16,6 +20,12 @@ public:
   }
   
 protected:
+	bool isInit() {
+	   return (mInstance != nullptr);
+   }
+   
    static Peripherals* mInstance;
    
 };
+
+#endif // PERIHERIALS_H

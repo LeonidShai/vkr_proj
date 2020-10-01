@@ -151,10 +151,11 @@ def spi_devices(l_d):
     :return: list (with one dict, which has spi devices)
     """
     spi_devices_list = []
-    spi_dev = {"DEVICES": []}
+    spi_dev = {"DEVICES": [], "CH": None}
     for i in l_d:
         if "SPI" in i["PINNAME"]:
             spi_dev["DEVICES"].append(i["PINNAME"][:-4])
+    spi_dev["CH"] = len(spi_dev["DEVICES"])
     spi_devices_list.append(spi_dev)
 
     return spi_devices_list
@@ -192,11 +193,12 @@ def data_unification(l1, l2):
     :return:
     """
     devices_list = []
-    dev = {"DEVICES": []}
+    dev = {"DEVICES": [], "CH": None}
     for i in l1:
         dev["DEVICES"].append(i["PINNAME"][:-4])
     for i in l2:
         dev["DEVICES"].append(i)
+    dev["CH"] = len(dev["DEVICES"])
     devices_list.append(dev)
     return devices_list
 
@@ -213,8 +215,16 @@ def generation_spi_chipselect(text_template, data):
     model = data[0]
     temp = template.render(model)
 
-    if "chipselect" in text_template:
+    if "chipselect_templ" in text_template:
         f = open("./stm_project/spi_chipselect.h", "w")
+        f.writelines(temp)
+        f.close()
+    elif "chipselect.cpp" in text_template:
+        f = open("./stm_project/src/spi_chipselect.cpp", "w")
+        f.writelines(temp)
+        f.close()
+    elif "peripheral_templ.cpp" in text_template:
+        f = open("./stm_project/src/id_periherial.cpp", "w")
         f.writelines(temp)
         f.close()
     else:
@@ -253,7 +263,9 @@ def maybe_main(mainc_work_file, inc_main_file):
     """
     text_template_spi_chipselect = "./templates/spi_chipselect_templ.h"
     text_template_id_periherial = "./templates/Periherial_id_templ.h"
-
+    text_template_id_periherial_cpp = "./templates/id_peripheral_templ.cpp"
+    text_template_spi_chipselect_cpp = "./templates/spi_chipselect.cpp"
+    
     number_str = parser(mainc_work_file)  # парсим номера нужных строк в файле main.c
 
     protocols = protocol_checker(mainc_work_file)  # получение названия всех протоколов
@@ -270,14 +282,16 @@ def maybe_main(mainc_work_file, inc_main_file):
     if "SPI" in quant_protocols:
         l_s_d = spi_devices(l_d)  # какие устройства входят в spi
         # print(l_s_d)
-        generation_spi_chipselect(text_template_spi_chipselect, l_s_d)  # функция, генерирующая spi_chipselect
-
+        generation_spi_chipselect(text_template_spi_chipselect, l_s_d)  # функция, генерирующая spi_chipselect.h
+        generation_spi_chipselect(text_template_spi_chipselect_cpp, l_s_d)  # функция, генерирующая spi_chipselect.cpp
+        
     need_protocols = take_need_protocols(protocols)  # выделение UART-ов и I2C-протоколов
     # print(need_protocols)
     all_dev = data_unification(l_d, need_protocols)  # объединение с SPI и powerbutt протоколов UART, I2C
     # print(all_dev)
 
     generation_spi_chipselect(text_template_id_periherial, all_dev)  # генерация IdPeriherial.h
+    generation_spi_chipselect(text_template_id_periherial_cpp, all_dev)  # генерация IdPeriherial.cpp
 
     dict_for_myfact = dict_for_myfactory_perips(all_dev, quant_protocols)
     # подготовка данных для шаблона MyFactoryPeripherals

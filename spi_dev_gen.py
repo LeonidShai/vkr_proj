@@ -278,13 +278,14 @@ def gen_spidevs(filename, all_data):
     text = open(text_template).read()
     template = jinja2.Template(text)
 
-    f = open("./stm_project/spi_devs.h", "w")
-    f.write("#include "'"i_spi.h"')
+    # f = open("./stm_project/spi_devs.h", "w")
+    # f.write("#include "'"i_spi.h"')
     for i in all_data:
         model = i
         temp = template.render(model)
+        f = open("./stm_project/"+model["SPINAME"].lower()+".h", "w")
         f.writelines(temp)
-    f.close()
+        f.close()
 
     return None
 

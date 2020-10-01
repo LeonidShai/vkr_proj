@@ -1,4 +1,7 @@
+#ifndef {{NAME}}_H
+#define {{NAME}}_H
 
+#include "i_i2c.h"
 
 class STM32{{NAME}} : public II2c {
 	
@@ -69,4 +72,6 @@ public:
     }
 
 	bool mInit{false};			
-}
+};
+
+#endif

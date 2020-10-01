@@ -1,6 +1,9 @@
+#ifndef IUART_H
+#define IUART_H
+
 #include "periherial.h"
 
-class IUart : public IPeriherial {
+class IUart : public IPeripheral {
 	
 
 public:
@@ -11,12 +14,12 @@ public:
 	virtual Status write(const uint8_t* mBuffer, size_t bufferSize, size_t timeout) noexcept = 0;
 	//virtual Status write(массив данных передаваемый, размер массива данных, время передачи) noexcept = 0;
 
-    PeriherialType getPeriherialType() const noexcept override {
+    PeripheralType getPeripheralType() const noexcept override {
         return 0x6c663df3U; 
     }
  
-    bool isPeriherialTypeParent(PeriherialType periherialType) const noexcept override {  // является ли IPIN родителем PowerButton, или др периферии
-        if (0x6c663df3U == periherialType) {
+    bool isPeripheralTypeParent(PeripheralType peripheralType) const noexcept override {  // является ли IPIN родителем PowerButton, или др периферии
+        if (0x6c663df3U == peripheralType) {
             return true;
         }
         return false;
@@ -24,6 +27,8 @@ public:
     
     virtual const char* getPortName() const noexcept = 0;  // метод для установки имени порта, на который подключается периферия
 	
-	const PeriherialType Type = 0x6c663df3U;
+	const PeripheralType peripheralType = 0x6c663df3U;
 	
 };
+
+#endif  // IUART_H

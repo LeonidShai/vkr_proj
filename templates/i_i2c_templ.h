@@ -1,6 +1,9 @@
+#ifndef I2C_H
+#define I2C_H
+
 #include "periherial.h"
 
-class II2c : public IPeriherial {
+class II2c : public IPeripheral {
 	
 
 public:
@@ -11,12 +14,12 @@ public:
 	virtual Status write(uint16_t devaddress, const uint8_t* mBuffer, size_t bufferSize, size_t timeout) noexcept = 0;
 	//virtual Status write(идентификатор устройства, адрес устройства, массив данных передаваемый, размер массива данных, время передачи) noexcept = 0;
 
-    PeriherialType getPeriherialType() const noexcept override {
+    PeripheralType getPeripheralType() const noexcept override {
         return 0x81d81a77U; 
     }
  
-    bool isPeriherialTypeParent(PeriherialType periherialType) const noexcept override {  // является ли IPIN родителем PowerButton, или др периферии
-        if (0x81d81a77U == periherialType) {
+    bool isPeripheralTypeParent(PeripheralType peripheralType) const noexcept override {  // является ли IPIN родителем PowerButton, или др периферии
+        if (0x81d81a77U == peripheralType) {
             return true;
         }
         return false;
@@ -24,6 +27,8 @@ public:
     
     virtual const char* getPortName() const noexcept = 0;  // метод для установки имени порта, на который подключается периферия
 	
-	const PeriherialType Type = 0x81d81a77U;
+	const PeripheralType peripheralType = 0x81d81a77U;
 	
 };
+
+#endif  // I2C_H

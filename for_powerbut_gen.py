@@ -231,15 +231,16 @@ def generation_powerbut_pins(data):
     template = jinja2.Template(text)
 
     # генерация файла с классами для всех powerbuttons_pins
-    f = open("./stm_project/gpio_pins.h", "w")
-    f.write("#include "'"i_pin.h"')
+    # f = open("./stm_project/gpio_pins.h", "w")
+    # f.write("#include "'"i_pin.h"')
     for i in range(len(data)):
         for key in data[i].keys():
             model = data[i][key]
         temp = template.render(model)
+        f = open("./stm_project/"+model["PINNAME"]+"_"+model["PIN"]+".h", "w")
         f.writelines(temp)
         f.writelines("\n")
-    f.close()
+        f.close()
 
     return None
 

@@ -1,4 +1,7 @@
+#ifndef {{NAME}}_H
+#define {{NAME}}_H
 
+#include "i_uart.h"
 
 class STM32{{NAME}} : public IUart {
 	
@@ -61,4 +64,6 @@ public:
     }
 
 	bool mInit{false};		
-}
+};
+
+#endif

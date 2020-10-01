@@ -1,16 +1,15 @@
-#include <cstdint>
- 
-enum class PeriherialID : uint32_t {
-	{% for DEVICE in DEVICES %}
-	{{DEVICE}};{% endfor %}
+#ifndef ID_PERIHERIAL_H
+#define ID_PERIHERIAL_H
 
+#include <cstdint>
+#include <cstring>
+ 
+enum class PeripheralID : uint32_t {
 	{% for DEVICE in DEVICES %}
-	PeriherialID getPeriherialIDByString(const char* s) noexcept {
-		if (0 == std::strcmp(s, "{{DEVICE}}")) {
-			return PeriherialID::{{DEVICE}};
-		}
-    
-		return PeriherialID::INVALID_ARG;
-	}
-	{% endfor %}
-}
+	{{DEVICE}},{% endfor %}
+	INVALID_ARG
+};
+
+PeripheralID getPeripheralIDByString(const char* s) noexcept;
+
+#endif // ID_PERIHERIAL_H

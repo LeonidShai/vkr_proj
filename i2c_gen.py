@@ -200,16 +200,18 @@ def generation_i2c_dev(data, quant_i2c, who):
     template = jinja2.Template(text)
 
     # генерация файла с классами для всех powerbuttons_pins
-    f = open("./stm_project/"+who.lower()+"_devs.h", "w")
-    if who == "I2C":
-        f.write("#include "'"i_i2c.h"')
-    elif who == "UART":
-        f.write("#include "'"i_uart.h"')
+    # f = open("./stm_project/"+who.lower()+"_devs.h", "w")
+    # if who == "I2C":
+    #    f.write("#include "'"i_i2c.h"')
+    # elif who == "UART":
+    #    f.write("#include "'"i_uart.h"')
+    
     for e in range(len(quant_i2c)):
         model = data[e][quant_i2c[e]]
         temp = template.render(model)
+        f = open("./stm_project/"+model["NAME"].lower()+".h", "w")
         f.writelines(temp)
-    f.close()
+        f.close()
 
     return None
 

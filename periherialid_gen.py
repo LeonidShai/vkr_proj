@@ -36,7 +36,11 @@ def create_skeleton(protocol_check_list):
     """
     if not os.path.isdir("stm_project"):
         os.mkdir("stm_project")
+        os.chdir("./stm_project")
+        os.mkdir("src")
+        os.chdir("../")
         shutil.copyfile("./templates/periherial_templ.h", "./stm_project/periherial.h")
+        shutil.copyfile("./templates/periherial_factory.cpp", "./stm_project/src/periherial_factory.cpp")
 
     for name in protocol_check_list:
         if name == "GPIO":

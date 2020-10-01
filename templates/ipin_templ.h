@@ -1,6 +1,10 @@
-#include "periherial.h"
+#ifndef IPIN_H
+#define IPIN_H
 
-class IPin : public IPeriherial {
+#include "periherial.h"
+#include <tuple>
+
+class IPin : public IPeripheral {
 
 public:
 
@@ -8,12 +12,12 @@ public:
     
     virtual Status write(bool state) noexcept = 0;  // запись при инициализации какой-либо периферии GPIO_PIN, SPI, I2C
 
-    PeriherialType getPeriherialType() const noexcept override {
+    PeripheralType getPeripheralType() const noexcept override {
         return 0xb5d17aaaU; 
     }
  
-    bool isPeriherialTypeParent(PeriherialType periherialType) const noexcept override {  // является ли IPIN родителем PowerButton, или др периферии
-        if (0xb5d17aaaU == periherialType) {
+    bool isPeripheralTypeParent(PeripheralType peripheralType) const noexcept override {  // является ли IPIN родителем PowerButton, или др периферии
+        if (0xb5d17aaaU == peripheralType) {
             return true;
         }
         return false;
@@ -21,5 +25,7 @@ public:
     
     virtual const char* getPortName() const noexcept = 0;  // метод для установки имени порта, на который подключается периферия
 	
-	const PeriherialType Type = {{0xb5d17aaaU}};
+	const PeripheralType peripheralType = 0xb5d17aaaU;
 };
+
+#endif // I_PIN
